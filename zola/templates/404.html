@@ -32,4 +32,12 @@
     </section>
   </div>
 </div>
+
+
+{% set article = get_section(path="articles/_index.md") %}
+{% for page in article.pages | slice(end=4) %}
+<div>{{ page.title }} - {{ loop.index0 }}</div>
+{% endfor %}
+
+
 {% endblock content %}
