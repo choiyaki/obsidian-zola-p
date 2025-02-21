@@ -15,12 +15,6 @@
   {{ macros_head::seo(title=title_addition, title_addition=title_addition, description=description, is_404=true) }}
 {% endblock seo %}
 
-{% block header %}
-  {# This value is matched by the config.extra.menu.main~url #}
-  {% set current_section = "docs" %}
-  {{ macros_header::header(current_section=current_section)}}
-{% endblock header %}
-
 {% block content %}
 <div class="wrap container" role="document">
   <div class="content">
@@ -29,7 +23,7 @@
         <div class="row justify-content-center">
 					<div class="col-md-12 col-lg-10 col-xxl-8">
 						<article>
-							<h1 class="text-center">あらら…Page not found :(</h1>
+							<h1 class="text-center">Page not found :(</h1>
 							<p class="text-center">The page you are looking for doesn't exist or has been moved.</p>
 						</article>
 					</div>
