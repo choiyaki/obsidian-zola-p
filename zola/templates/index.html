@@ -20,12 +20,6 @@
   {{ macros_head::seo(title=title_addition, title_addition=title_addition, description=description, is_home=true) }}
 {% endblock seo %}
 
-{% block header %}
-  {# This value is matched by the config.extra.menu.main~url #}
-  {% set current_section = "docs" %}
-  {{ macros_header::header(current_section=current_section)}}
-{% endblock header %}
-
 {% block content %}
 
 <div class="home">
