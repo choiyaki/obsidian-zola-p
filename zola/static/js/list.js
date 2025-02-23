@@ -47,7 +47,7 @@ container.innerHTML = "";
 var title = document.createElement("h4");
     title.textContent = "Back Links: ";
     container.appendChild(title);
-if (filteredItems.length <> 0) {
+if (filteredItems.length != 0) {
 
     var list = document.createElement("ul");
     filteredItems.forEach((node) => {
