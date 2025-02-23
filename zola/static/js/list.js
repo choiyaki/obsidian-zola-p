@@ -10,7 +10,7 @@ if (curr_url.endsWith("/")) {
 }
 
 // Parse nodes and edges
-var curr_node = graph_data.nodes.find((node) => decodeURI(node.url) === curr_url);
+var curr_node = list_data.nodes.find((node) => decodeURI(node.url) === curr_url);
 var connected_nodes = [];
 
 if (curr_node) {
