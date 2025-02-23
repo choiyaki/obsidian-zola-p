@@ -23,7 +23,7 @@ if (curr_node) {
         .filter(Boolean); // `undefined` を削除
 }
 
-console.log("edges:",graph_data.edges);
+console.log("edges:",graph_data.nodes.url);
 console.log("backlinks:", backlinks);
 
 // Get container for list
