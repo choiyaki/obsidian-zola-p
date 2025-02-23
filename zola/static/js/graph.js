@@ -24,15 +24,18 @@ console.log("connected_nodes",connected_nodes);
 
 
 //本文を取得
-const elements = document.querySelectorAll(".docs-content:not(#list)");
+const text = Array.from(document.querySelectorAll(".doc-content:not(#list)"))
+    .map(el => el.innerText) // 各要素のテキストを取得
+    .join("\n"); // 改行で結合
 
-elements.forEach(el => console.log(el.innerText));
-console.log(elements);
+console.log("本文", text);
 
-
-function filterArrayByText(text, words) {
-    return words.filter(word => !text.includes(word));
+function filterArrayByText(text, items) {
+    return items.filter(item => !text.includes(item.label));
 }
+
+const filteredItems = filterArrayByText(text, connected_nodes);
+console.log("残って欲しいものだけかな？", filteredItems);
 
 // Get container for list
 var container = document.getElementById("list");
