@@ -10,13 +10,21 @@ var normalizeURL = (url) => decodeURI(url).replace(/\/$/, "");
 var curr_url = normalizeURL(window.location.href.replace(location.origin, ""));
 var curr_node = graph_data.nodes.find((node) => normalizeURL(node.url) === curr_url);
 
+console.log("Current URL:", curr_url);
+console.log("Current Node:", curr_node);
+
 var backlinks = [];
 
 if (curr_node) {
     backlinks = graph_data.edges
-        .filter((edge) => String(edge.to) === String(curr_node.id)) // **バックリンクのみ取得**
-        .map((edge) => graph_data.nodes.find((node) => String(node.id) === String(edge.from)))
-        .filter(Boolean); // `undefined` を削除
+        .filter((edge) => String(edge.to) === String(curr_node.id)) // `to` が `curr_node.id` のエッジのみ
+        .map((edge) => {
+            var node = graph_data.nodes.find((n) => String(n.id) === String(edge.from));
+            return node ? { id: node.id, url: node.url, label: node.label } : null;
+        })
+        .filter(Boolean);
+
+    console.log("Filtered Backlinks:", backlinks);
 }
 
 // Get container for list
