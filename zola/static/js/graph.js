@@ -24,7 +24,7 @@ console.log("connected_nodes",connected_nodes);
 
 
 //本文を取得
-const text = Array.from(document.querySelectorAll(".doc-content:not(#list)"))
+const text = Array.from(document.querySelectorAll(".docs-content:not(#list)"))
     .map(el => el.innerText) // 各要素のテキストを取得
     .join("\n"); // 改行で結合
 
