@@ -24,7 +24,8 @@
           {{ macros_edit_page::docs_edit_page(current_path=current_path) }}
         {% endif %}
         {% if config.extra.page_graph %}
-          {{ macros_docs_graph::docs_graph(page=page, current_section=current_section) }}
+           <div id="list"></div>
+           {{ macros_docs_graph::docs_graph(page=page, current_section=current_section) }}
           {% endif %}
       </main>
     </div>
