@@ -9,41 +9,40 @@ if (curr_url.endsWith("/")) {
     curr_url = curr_url.slice(0, -1);
 }
 
-// Parse nodes and edges
+// Find current node
 var curr_node = graph_data.nodes.find((node) => decodeURI(node.url) === curr_url);
-var connected_nodes = [];
 
+// Extract backlinks (nodes that link to the current node)
 if (curr_node) {
-    connected_nodes = graph_data.edges
-        .filter((edge) => edge.from === curr_node.id || edge.to === curr_node.id)
-        .map((edge) => (edge.from === curr_node.id ? edge.to : edge.from))
-        .map((id) => graph_data.nodes.find((node) => node.id === id));
+    var backlinks = graph_data.edges
+        .filter((edge) => edge.to === curr_node.id) // Only backlinks (where 'to' matches the current node)
+        .map((edge) => {
+            return graph_data.nodes.find((node) => node.id === edge.from);
+        })
+        .filter(Boolean); // Remove any null values
+} else {
+    var backlinks = [];
 }
 
-// Get container for list
-var container = document.getElementById("list");
+// Create list elements for backlinks
+var container = document.getElementById("backlinks-list");
+if (!container) {
+    container = document.createElement("ul");
+    container.id = "backlinks-list";
+    document.body.appendChild(container);
+} else {
+    container.innerHTML = ""; // Clear previous content
+}
 
-// Clear previous content
-container.innerHTML = "";
-
-// Create list elements
-if (curr_node) {
-    var title = document.createElement("h4");
-    title.textContent = "Links: ";
-    container.appendChild(title);
-
-    var list = document.createElement("ul");
-    connected_nodes.forEach((node) => {
+if (backlinks.length > 0) {
+    backlinks.forEach((node) => {
         var listItem = document.createElement("li");
         var link = document.createElement("a");
         link.href = node.url;
-        link.textContent = node.label;
-        link.target = "_blank";
+        link.textContent = node.title || node.url; // Use title if available, otherwise URL
         listItem.appendChild(link);
-        list.appendChild(listItem);
+        container.appendChild(listItem);
     });
-
-    container.appendChild(list);
 } else {
-    container.textContent = "No related nodes found.";
+    container.innerHTML = "<p>No backlinks found.</p>";
 }
