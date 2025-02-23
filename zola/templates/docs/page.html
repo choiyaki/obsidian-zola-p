@@ -35,4 +35,8 @@
   {{ macros_graph::graph_js() }}
 {% endif %}
 
+{% if config.extra.page_graph %}
+  {{ macros_graph::list_js() }}
+{% endif %}
+
 {% endblock content %}
