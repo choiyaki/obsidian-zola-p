@@ -1,66 +1,107 @@
 // Query dark mode setting
 function isDark() {
-    return localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+	return localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
 }
 
 // Get URL of current page and also current node
 var curr_url = decodeURI(window.location.href.replace(location.origin, ""));
 if (curr_url.endsWith("/")) {
-    curr_url = curr_url.slice(0, -1);
+	curr_url = curr_url.slice(0, -1);
 }
+
+// Get graph element
+var container = document.getElementById("graph");
 
 // Parse nodes and edges
-var curr_node = graph_data.nodes.find((node) => decodeURI(node.url) === curr_url);
-var connected_nodes = [];
-
-if (curr_node) {
-    connected_nodes = graph_data.edges
-        .filter((edge) => edge.from === curr_node.id || edge.to === curr_node.id)
-        .map((edge) => (edge.from === curr_node.id ? edge.to : edge.from))
-        .map((id) => graph_data.nodes.find((node) => node.id === id));
+try {
+	var curr_node = graph_data.nodes.filter((node) => decodeURI(node.url) == curr_url);
+} catch (error) {
+	var curr_node = null;
 }
+var nodes = null;
+var edges = new vis.DataSet(graph_data.edges);
 
-console.log("connected_nodes",connected_nodes);
+if (curr_node.length > 0) {
+	curr_node = curr_node[0];
 
+	// Get nodes connected to current
+	var connected_nodes = graph_data.edges
+		.filter((edge) => edge.from == curr_node.id || edge.to == curr_node.id)
+		.map((edge) => {
+			if (edge.from == curr_node.id) {
+				return edge.to;
+			}
+			return edge.from;
+		});
 
-//本文を取得
-const text = Array.from(document.querySelectorAll(".docs-content:not(#list)"))
-    .map(el => el.innerText) // 各要素のテキストを取得
-    .join("\n"); // 改行で結合
-
-console.log("本文", text);
-
-function filterArrayByText(text, items) {
-    return items.filter(item => !text.includes(item.label));
-}
-
-const filteredItems = filterArrayByText(text, connected_nodes);
-console.log("残って欲しいものだけかな？", filteredItems);
-
-// Get container for list
-var container = document.getElementById("list");
-
-// Clear previous content
-container.innerHTML = "";
-
-// Create list elements
-if (filteredItems) {
-    var title = document.createElement("h4");
-    title.textContent = "Back Lincs: ";
-    container.appendChild(title);
-
-    var list = document.createElement("ul");
-    filteredItems.forEach((node) => {
-        var listItem = document.createElement("li");
-        var link = document.createElement("a");
-        link.href = node.url;
-        link.textContent = node.label;
-        link.target = "_blank";
-        listItem.appendChild(link);
-        list.appendChild(listItem);
-    });
-
-    container.appendChild(list);
+	if (graph_is_local) {
+		nodes = new vis.DataSet(graph_data.nodes.filter((node) => node.id == curr_node.id || connected_nodes.includes(node.id)));
+	} else {
+		nodes = new vis.DataSet(graph_data.nodes);
+	}
 } else {
-    container.textContent = "No Back Links found.";
+	curr_node = null;
+	nodes = new vis.DataSet(graph_data.nodes);
 }
+
+// Get nodes and edges from generated javascript
+var max_node_val = Math.max(...nodes.map((node) => node.value));
+
+// Highlight current node and set to center
+if (curr_node) {
+	nodes.update({
+		id: curr_node.id,
+		value: Math.max(4, max_node_val * 2.5),
+		shape: "star",
+		color: "#a6a7ed",
+		font: {
+			strokeWidth: 1,
+		},
+		x: 0,
+		y: 0,
+	});
+}
+
+// Construct graph
+var options = ___GRAPH_OPTIONS___;
+
+var graph = new vis.Network(
+	container,
+	{
+		nodes: nodes,
+		edges: edges,
+	},
+	options
+);
+
+// Clickable URL
+graph.on("selectNode", function (params) {
+	if (params.nodes.length === 1) {
+		var node = nodes.get(params.nodes[0]);
+		if (graph_link_replace) {
+			window.open(node.url, "_self");
+		} else {
+			window.open(node.url, "_blank");
+		}
+	}
+});
+
+// Focus on current node + scaling
+graph.once("afterDrawing", function () {
+	if (curr_node) {
+		if (!graph_is_local) {
+			graph.focus(curr_node.id, {
+				scale: graph.getScale() * 1.8,
+			});
+		}
+	} else {
+		var clientHeight = container.clientHeight;
+		graph.moveTo({
+			position: {
+				x: 0,
+				y: -clientHeight / 3,
+			},
+			scale: graph.getScale() * 1.2,
+		});
+	}
+});
