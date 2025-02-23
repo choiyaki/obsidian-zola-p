@@ -11,13 +11,12 @@ if (curr_url.endsWith("/")) {
 
 // Parse nodes and edges
 var curr_node = graph_data.nodes.find((node) => decodeURI(node.url) === curr_url);
-var connected_nodes = [];
+var backlinks = [];
 
 if (curr_node) {
-    connected_nodes = graph_data.edges
-        .filter((edge) => edge.from === curr_node.id || edge.to === curr_node.id)
-        .map((edge) => (edge.from === curr_node.id ? edge.to : edge.from))
-        .map((id) => graph_data.nodes.find((node) => node.id === id));
+    backlinks = graph_data.edges
+        .filter((edge) => edge.to === curr_node.id) // **このページ（curr_node）へのリンクのみを取得**
+        .map((edge) => graph_data.nodes.find((node) => node.id === edge.from));
 }
 
 // Get container for list
@@ -29,21 +28,26 @@ container.innerHTML = "";
 // Create list elements
 if (curr_node) {
     var title = document.createElement("h2");
-    title.textContent = "Current Node: " + curr_node.label;
+    title.textContent = "Backlinks to: " + curr_node.label;
     container.appendChild(title);
 
-    var list = document.createElement("ul");
-    connected_nodes.forEach((node) => {
-        var listItem = document.createElement("li");
-        var link = document.createElement("a");
-        link.href = node.url;
-        link.textContent = node.label;
-        link.target = "_blank";
-        listItem.appendChild(link);
-        list.appendChild(listItem);
-    });
-
-    container.appendChild(list);
+    if (backlinks.length > 0) {
+        var list = document.createElement("ul");
+        backlinks.forEach((node) => {
+            var listItem = document.createElement("li");
+            var link = document.createElement("a");
+            link.href = node.url;
+            link.textContent = node.label;
+            link.target = "_blank";
+            listItem.appendChild(link);
+            list.appendChild(listItem);
+        });
+        container.appendChild(list);
+    } else {
+        var noLinks = document.createElement("p");
+        noLinks.textContent = "No backlinks found.";
+        container.appendChild(noLinks);
+    }
 } else {
-    container.textContent = "No related nodes found.";
+    container.textContent = "Page not found in graph data.";
 }
