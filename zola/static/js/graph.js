@@ -11,7 +11,7 @@ var curr_url = normalizeURL(window.location.href.replace(location.origin, ""));
 var curr_node = graph_data.nodes.find((node) => normalizeURL(node.url) === curr_url);
 
 console.log("Current URL:", curr_url);
-console.log("Current node URL:", normalizeURL(curr_node.id));
+console.log("Current node URL:", normalizeURL(curr_node));
 
 
 var backlinks = [];
@@ -23,7 +23,7 @@ if (curr_node) {
         .filter(Boolean); // `undefined` を削除
 }
 
-console.log("edges:",graph_data.nodes.url);
+console.log("edges:",graph_data.nodes);
 console.log("backlinks:", backlinks);
 
 // Get container for list
