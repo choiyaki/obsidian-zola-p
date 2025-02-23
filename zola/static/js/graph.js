@@ -22,6 +22,21 @@ if (curr_node) {
 
 console.log("connected_nodes",connected_nodes);
 
+
+//本文を取得
+const text = document.body.innerText;
+console.log(text);
+function filterArrayByText(text, words) {
+    return words.filter(word => !text.includes(word));
+}
+
+
+
+//const filteredWords = filterArrayByText(text, words);
+
+const filteredWords = filterArrayByText(text, words);
+console.log(filteredWords); // ["納豆", "スイカ"]
+
 // Get container for list
 var container = document.getElementById("list");
 
