@@ -24,6 +24,7 @@ highlight_code = true
 home_graph = "___HOME_GRAPH___"
 is_netlify = true
 page_graph = "___PAGE_GRAPH___"
+page_list = "___PAGE_LIST___"
 title_addition = "___SITE_TITLE_TAB___"
 
 language_code = "en-US"
