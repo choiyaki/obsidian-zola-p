@@ -14,10 +14,10 @@ var curr_node = list_data.nodes.find((node) => decodeURI(node.url) === curr_url)
 var connected_nodes = [];
 
 if (curr_node) {
-    connected_nodes = graph_data.edges
+    connected_nodes = list_data.edges
         .filter((edge) => edge.from === curr_node.id || edge.to === curr_node.id)
         .map((edge) => (edge.from === curr_node.id ? edge.to : edge.from))
-        .map((id) => graph_data.nodes.find((node) => node.id === id));
+        .map((id) => list_data.nodes.find((node) => node.id === id));
 }
 
 console.log("connected_nodes",connected_nodes);

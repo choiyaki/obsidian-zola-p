@@ -472,6 +472,41 @@ def parse_graph(nodes: Dict[str, str], edges: List[Tuple[str, str]]):
                 ]
             )
         )
+        
+        
+# Generate list data
+    list_info = {
+        "nodes": [
+            {
+                "id": node_ids[url],
+                "label": title,
+                "url": url,
+                "color": PASTEL_COLORS[top_nodes[url]] if url in top_nodes else None,
+                "value": math.log10(edge_counts[url] + 1) + 1,
+                "opacity": 0.1,
+            }
+            for url, title in nodes.items()
+        ],
+        "edges": [
+            {"from": node_ids[edge[0]], "to": node_ids[edge[1]]}
+            for edge in set(edges)
+            if edge[0] in node_ids and edge[1] in node_ids
+        ],
+    }
+    list_info = json.dumps(list_info)
+
+    with open(site_dir / "static/js/list_info.js", "w") as f:
+        is_local = "true" if Settings.is_true("LOCAL_GRAPH") else "false"
+        link_replace = "true" if Settings.is_true("GRAPH_LINK_REPLACE") else "false"
+        f.write(
+            "\n".join(
+                [
+                    f"var list_data={list_info}",
+                    f"var list_is_local={is_local}",
+                    f"var list_link_replace={link_replace}",
+                ]
+            )
+        ) 
 
 
 # ---------------------------------------------------------------------------- #
