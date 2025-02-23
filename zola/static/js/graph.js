@@ -11,7 +11,7 @@ var curr_url = normalizeURL(window.location.href.replace(location.origin, ""));
 var curr_node = graph_data.nodes.find((node) => normalizeURL(node.url) === curr_url);
 
 console.log("Current URL:", curr_url);
-console.log("Current Node:", curr_node);
+console.log("Current Node:", normalizeURL(node.url));
 
 
 var backlinks = [];
