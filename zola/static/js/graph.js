@@ -44,13 +44,13 @@ var container = document.getElementById("list");
 container.innerHTML = "";
 
 // Create list elements
-if (curr_node) {
-    var title = document.createElement("h2");
-    title.textContent = "Current Node: " + curr_node.label;
+if (filteredItems) {
+    var title = document.createElement("h4");
+    title.textContent = "Back Lincs: ";
     container.appendChild(title);
 
     var list = document.createElement("ul");
-    connected_nodes.forEach((node) => {
+    filteredItems.forEach((node) => {
         var listItem = document.createElement("li");
         var link = document.createElement("a");
         link.href = node.url;
@@ -62,5 +62,5 @@ if (curr_node) {
 
     container.appendChild(list);
 } else {
-    container.textContent = "No related nodes found.";
+    container.textContent = "No Back Links found.";
 }
