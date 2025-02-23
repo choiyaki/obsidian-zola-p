@@ -3,20 +3,20 @@ function isDark() {
     return localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
 }
 
-// Get URL of current page and also current node
-var curr_url = decodeURI(window.location.href.replace(location.origin, ""));
-if (curr_url.endsWith("/")) {
-    curr_url = curr_url.slice(0, -1);
-}
+// URL 正規化関数
+var normalizeURL = (url) => decodeURI(url).replace(/\/$/, "");
 
-// Parse nodes and edges
-var curr_node = graph_data.nodes.find((node) => decodeURI(node.url) === curr_url);
+// Get URL of current page and also current node
+var curr_url = normalizeURL(window.location.href.replace(location.origin, ""));
+var curr_node = graph_data.nodes.find((node) => normalizeURL(node.url) === curr_url);
+
 var backlinks = [];
 
 if (curr_node) {
     backlinks = graph_data.edges
-        .filter((edge) => edge.to === curr_node.id) // **このページ（curr_node）へのリンクのみを取得**
-        .map((edge) => graph_data.nodes.find((node) => node.id === edge.from));
+        .filter((edge) => String(edge.to) === String(curr_node.id)) // **バックリンクのみ取得**
+        .map((edge) => graph_data.nodes.find((node) => String(node.id) === String(edge.from)))
+        .filter(Boolean); // `undefined` を削除
 }
 
 // Get container for list

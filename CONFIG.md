@@ -52,7 +52,7 @@ Shows knowledge graph on every page. Put "" to disable. Default: "y".
 Page graph only shows directly connected nodes. Default: "".
 
 ### `GRAPH_LINK_REPLACE`
-If "y", clicking on graph link replaces current tab. Else, page is opened in new tab. Default: "".
+If "y", clicking on graph link replaces current tab. Else, page is opened in new tab. Default: "y".
 
 ### `STRICT_LINE_BREAKS`
 Whether to use standard Markdown strict line breaks (single line breaks ignored unless followed by 2 whitespaces), or to use Obsidian-style line breaks. If "y", strict line break is used, else, Obsidian-style is used. Users who use LaTEX must set this to "y" for equations to render properly. Default: "y".
