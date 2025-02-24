@@ -81,7 +81,7 @@ graph.on("selectNode", function (params) {
 		if (graph_link_replace) {
 			window.open(node.url, "_self");
 		} else {
-			window.open(node.url, "_blank");
+			window.open(node.url, "_self");
 		}
 	}
 });
