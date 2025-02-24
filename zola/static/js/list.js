@@ -44,10 +44,11 @@ var container = document.getElementById("list");
 container.innerHTML = "";
 
 // Create list elements
-var title = document.createElement("h4");
+var title = document.createElement("h5");
     title.textContent = "Back Links: ";
+    title.style.color = "gray";
     container.appendChild(title);
-if (filteredItems.length != 0) {
+if (filteredItems.length !== 0) {
 
     var list = document.createElement("ul");
     filteredItems.forEach((node) => {
@@ -55,12 +56,12 @@ if (filteredItems.length != 0) {
         var link = document.createElement("a");
         link.href = node.url;
         link.textContent = node.label;
-        link.target = "_blank";
+        link.target = "_self";
         listItem.appendChild(link);
         list.appendChild(listItem);
     });
 
     container.appendChild(list);
 } else {
-    container.textContent = "No Back Links found.";
+    container.appendChild("No backlinks found.");
 }

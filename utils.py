@@ -496,7 +496,7 @@ def parse_graph(nodes: Dict[str, str], edges: List[Tuple[str, str]]):
     list_info = json.dumps(list_info)
 
     with open(site_dir / "static/js/list_info.js", "w") as f:
-        is_local = "true" if Settings.is_true("LOCAL_GRAPH") else "false"
+        is_local = "true" if Settings.is_true("LOCAL_LIST") else "false"
         link_replace = "true" if Settings.is_true("GRAPH_LINK_REPLACE") else "false"
         f.write(
             "\n".join(
@@ -506,8 +506,7 @@ def parse_graph(nodes: Dict[str, str], edges: List[Tuple[str, str]]):
                     f"var list_link_replace={link_replace}",
                 ]
             )
-        ) 
-
+        )
 
 # ---------------------------------------------------------------------------- #
 #                         Write Settings to Javascript                         #
