@@ -20,10 +20,9 @@ if (curr_node) {
         .map((id) => list_data.nodes.find((node) => node.id === id));
 }
 
-console.log("connected_nodes",connected_nodes);
+console.log("connected_nodes", connected_nodes);
 
-
-//本文を取得
+// 本文を取得
 const text = Array.from(document.querySelectorAll(".docs-content:not(#list)"))
     .map(el => el.innerText) // 各要素のテキストを取得
     .join("\n"); // 改行で結合
@@ -34,8 +33,12 @@ function filterArrayByText(text, items) {
     return items.filter(item => !text.includes(item.label));
 }
 
-const filteredItems = filterArrayByText(text, connected_nodes);
-console.log("残って欲しいものだけかな？", filteredItems);
+let filteredItems = filterArrayByText(text, connected_nodes);
+
+// ここで filteredItems をアルファベット順（label 昇順）にソート
+filteredItems.sort((a, b) => a.label.localeCompare(b.label));
+
+console.log("ソート後の残って欲しいもの", filteredItems);
 
 // Get container for list
 var container = document.getElementById("list");
@@ -45,11 +48,11 @@ container.innerHTML = "";
 
 // Create list elements
 var title = document.createElement("h5");
-    title.textContent = "Back Links: ";
-    title.style.color = "gray";
-    container.appendChild(title);
-if (filteredItems.length !== 0) {
+title.textContent = "Back Links: ";
+title.style.color = "gray";
+container.appendChild(title);
 
+if (filteredItems.length !== 0) {
     var list = document.createElement("ul");
     filteredItems.forEach((node) => {
         var listItem = document.createElement("li");
