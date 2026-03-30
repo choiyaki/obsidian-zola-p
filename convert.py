@@ -6,6 +6,7 @@ from utils import (
     DocPath,
     Settings,
     parse_graph,
+    export_page_data,
     pp,
     raw_dir,
     site_dir,
@@ -22,6 +23,7 @@ if __name__ == "__main__":
 
     nodes: Dict[str, str] = {}
     edges: List[Tuple[str, str]] = []
+    page_meta = []
     section_count = 0
 
     all_paths = list(sorted(raw_dir.glob("**/*")))
@@ -32,6 +34,21 @@ if __name__ == "__main__":
             if doc_path.is_md:
                 # Page
                 nodes[doc_path.abs_url] = doc_path.page_title
+                
+                try:
+                    import os
+                    stat = os.stat(doc_path.old_path)
+                    created_tf = getattr(stat, 'st_birthtime', stat.st_mtime)
+                except Exception:
+                    created_tf = doc_path.modified.timestamp()
+                
+                page_meta.append({
+                    "url": doc_path.abs_url,
+                    "title": doc_path.page_title,
+                    "modified": doc_path.modified.timestamp(),
+                    "created": created_tf,
+                })
+
                 content = doc_path.content
                 parsed_lines: List[str] = []
                 for line in content:
@@ -83,4 +100,5 @@ if __name__ == "__main__":
     pp(nodes)
     pp(edges)
     parse_graph(nodes, edges)
+    export_page_data(page_meta)
     write_settings()

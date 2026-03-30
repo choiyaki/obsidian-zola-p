@@ -525,3 +525,15 @@ def write_settings():
                 ]
             )
         )
+
+# ---------------------------------------------------------------------------- #
+#                                Export Page Data                              #
+# ---------------------------------------------------------------------------- #
+def export_page_data(page_meta: List[Dict]):
+    """
+    Writes all page metadata to Javascript file for front-end access.
+    """
+    with open(site_dir / "static/js/page_data.js", "w") as f:
+        f.write(
+            "var page_data = " + json.dumps(page_meta) + ";\n"
+        )
