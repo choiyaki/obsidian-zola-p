@@ -67,9 +67,9 @@ p {
   display: none !important;
 }
 
-/* メイン幅調整 */
+/* メイン幅調整 (PC時の各ページ) */
 main {
-  max-width: 720px;
+  max-width: 1000px; /* 720pxから1000pxへ広げ、PC時の各ページの横幅を広く確保 */
   margin: 0 auto;
 }
 
@@ -97,12 +97,17 @@ body.home, body.home main {
 }
 
 @media (max-width: 768px) {
+  /* 各ページのモバイル表示時 */
+  body {
+    padding: 4.5rem 4px 1rem 4px !important; /* スマホ時の横幅をギリギリにしつつ、上部のヘッダー被り（4.5rem空間）を回避 */
+  }
+
   body.home {
-    padding: 1rem 0; /* 画面枠のpaddingをゼロに近づける */
+    padding: 4.5rem 0 1rem 0 !important; /* ホーム画面も同様に上部空間をしっかり確保 */
   }
   
   /* Bootstrapのコンテナ側の余白もモバイル時は削る */
-  body.home .container, body.home .content {
+  .container, .content {
     padding-left: 2px !important;
     padding-right: 2px !important;
   }
