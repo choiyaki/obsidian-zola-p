@@ -5,6 +5,11 @@ pip install python-slugify
 # Avoid copying over netlify.toml (will ebe exposed to public API)
 echo "netlify.toml" >>__obsidian/.gitignore
 
+# Download obsidian-export Linux binary because Netlify runs on Linux (the repo binary is for Mac)
+curl -sL https://github.com/zoni/obsidian-export/releases/download/v25.3.0/obsidian-export-x86_64-unknown-linux-gnu.tar.xz | tar xJC /tmp
+cp /tmp/obsidian-export-x86_64-unknown-linux-gnu/obsidian-export __site/bin/obsidian-export
+chmod +x __site/bin/obsidian-export
+
 # Sync Zola template contents
 rsync -a __site/zola/ __site/build
 rsync -a __site/content/ __site/build/content
