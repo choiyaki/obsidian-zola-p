@@ -32,8 +32,7 @@ body {
   line-height: 1.8;
   background: #fff;
   color: #222;
-  max-width: 720px;
-  margin: 0 auto;
+  margin: 0;
   padding: 2rem 1rem;
 }
 
@@ -97,22 +96,35 @@ body.home, body.home main {
 }
 
 @media (max-width: 768px) {
-  /* 各ページのモバイル表示時 */
-  body {
-    padding: 4.5rem 4px 1rem 4px !important; /* スマホ時の横幅をギリギリにしつつ、上部のヘッダー被り（4.5rem空間）を回避 */
+  html, body {
+    overflow-x: hidden; /* はみ出し（横スクロール）を絶対防ぐ安全装置 */
   }
 
-  body.home {
-    padding: 4.5rem 0 1rem 0 !important; /* ホーム画面も同様に上部空間をしっかり確保 */
+  body {
+    padding: 4.5rem 0 1rem 0 !important; /* 左右余白をゼロにし、コンテンツ側で正確に制御する */
+  }
+
+  /* 記事表示メインコンテナの余白を適切に削り、Bootstrap特有のマイナスマージンによる画面外はみ出しを防ぐ */
+  .wrap.container, .content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
   }
   
-  /* Bootstrapのコンテナ側の余白もモバイル時は削る */
-  .container, .content {
-    padding-left: 2px !important;
-    padding-right: 2px !important;
+  .wrap .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important; /* rowのマイナスマージンを打ち消してはみ出し防止 */
+  }
+
+  .wrap [class^="col-"], .wrap [class*=" col-"] {
+    padding-left: 6px !important;
+    padding-right: 6px !important; /* Column自体の余白のみを残し、ギリギリで切れないように守る */
   }
   
   .home-card-grid {
+    padding-left: 6px;
+    padding-right: 6px;
     grid-template-columns: repeat(2, 1fr); /* モバイルは2列 */
     gap: 4px; /* 隙間をさらに縮小してギリギリまで広げる */
   }
