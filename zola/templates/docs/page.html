@@ -28,19 +28,12 @@
     {{ macros_docs_list::docs_list(page=page, current_section=current_section) }}
            {% endif %}
            
-        {% if config.extra.page_graph %}
-           {{ macros_docs_graph::docs_graph(page=page, current_section=current_section) }}
-          {% endif %}
-          
       </main>
     </div>
   </div>
 </div>
 {% if config.extra.page_list %}
   {{ macros_list::list_js() }}
-{% endif %}
-{% if config.extra.page_graph %}
-  {{ macros_graph::graph_js() }}
 {% endif %}
 
 {% endblock content %}
