@@ -11,34 +11,48 @@ if (curr_url.endsWith("/")) {
 
 // Parse nodes and edges
 var curr_node = list_data.nodes.find((node) => decodeURI(node.url) === curr_url);
-var connected_nodes = [];
+
+let oneHopNodes = [];
+let outgoingNodes = [];
 
 if (curr_node) {
-    connected_nodes = list_data.edges
+    // 1-hop links (all direct links in and out)
+    oneHopNodes = list_data.edges
         .filter((edge) => edge.from === curr_node.id || edge.to === curr_node.id)
         .map((edge) => (edge.from === curr_node.id ? edge.to : edge.from))
-        .map((id) => list_data.nodes.find((node) => node.id === id));
+        .map((id) => list_data.nodes.find((node) => node.id === id))
+        .filter(n => n);
+        
+    // Outgoing specific (to be used as 2-hop hubs)
+    outgoingNodes = list_data.edges
+        .filter((edge) => edge.from === curr_node.id)
+        .map((edge) => list_data.nodes.find((node) => node.id === edge.to))
+        .filter(n => n);
 }
 
-console.log("connected_nodes", connected_nodes);
+// 2-hop calculation
+let twoHopGroups = []; // { hub: node, links: [node] }
 
-// 本文を取得
-const text = Array.from(document.querySelectorAll(".docs-content:not(#list)"))
-    .map(el => el.innerText) // 各要素のテキストを取得
-    .join("\n"); // 改行で結合
+outgoingNodes.forEach((hub) => {
+    // Find all OTHER nodes that link TO this hub
+    let edgesToHub = list_data.edges.filter(e => e.to === hub.id && e.from !== curr_node.id);
+    let linkedNodes = edgesToHub
+        .map(e => list_data.nodes.find(n => n.id === e.from))
+        .filter(n => n);
+        
+    if (linkedNodes.length > 0) {
+        linkedNodes.sort((a,b) => a.label.localeCompare(b.label));
+        twoHopGroups.push({
+            hub: hub,
+            links: linkedNodes
+        });
+    }
+});
 
-console.log("本文", text);
-
-function filterArrayByText(text, items) {
-    return items.filter(item => !text.includes(item.label));
-}
-
-let filteredItems = filterArrayByText(text, connected_nodes);
-
-// ここで filteredItems をアルファベット順（label 昇順）にソート
-filteredItems.sort((a, b) => a.label.localeCompare(b.label));
-
-console.log("ソート後の残って欲しいもの", filteredItems);
+// Sort sets
+oneHopNodes = Array.from(new Set(oneHopNodes));
+oneHopNodes.sort((a,b) => a.label.localeCompare(b.label));
+twoHopGroups.sort((a,b) => a.hub.label.localeCompare(b.hub.label));
 
 // Helper to format date
 function formatDate(timestamp) {
@@ -145,30 +159,71 @@ function createCard(page) {
 var container = document.getElementById("list");
 container.innerHTML = "";
 
-var titleEl = document.createElement("h5");
+// 1. Render Links (1-hop)
+var titleEl = document.createElement("h3");
 titleEl.textContent = "Links";
-titleEl.style.color = "gray";
+titleEl.style.color = "#444";
 titleEl.style.marginTop = "3rem";
+titleEl.style.marginBottom = "1.5rem";
+titleEl.style.fontSize = "1.5rem";
+titleEl.style.fontWeight = "600";
 container.appendChild(titleEl);
 
-if (filteredItems.length !== 0) {
+if (oneHopNodes.length !== 0) {
     var grid = document.createElement("div");
     grid.className = "link-card-grid";
-    grid.style.marginTop = "1rem";
     
-    filteredItems.forEach((node) => {
-        // Find full page_data if available
+    oneHopNodes.forEach((node) => {
         let fullData = typeof page_data !== 'undefined' ? page_data.find(p => p.url === node.url || decodeURI(p.url) === decodeURI(node.url)) : null;
         let cardData = fullData || { url: node.url, title: node.label };
-        
         let card = createCard(cardData);
         grid.appendChild(card);
     });
 
     container.appendChild(grid);
-} else {
-    let emptyMsg = document.createElement("p");
-    emptyMsg.textContent = "No backlinks found.";
-    emptyMsg.className = "text-muted";
-    container.appendChild(emptyMsg);
+}
+
+// 2. Render 2-hop links
+if (twoHopGroups.length > 0) {
+    var spacer = document.createElement("div");
+    spacer.style.marginTop = "4rem";
+    container.appendChild(spacer);
+    
+    twoHopGroups.forEach(group => {
+        var groupSection = document.createElement("div");
+        groupSection.style.marginBottom = "2.5rem";
+        
+        var groupTitle = document.createElement("h4");
+        groupTitle.style.fontSize = "1.1rem";
+        groupTitle.style.fontWeight = "600";
+        groupTitle.style.marginBottom = "1.2rem";
+        groupTitle.style.color = "#555";
+        
+        var hubLink = document.createElement("a");
+        hubLink.href = group.hub.url;
+        hubLink.textContent = group.hub.label;
+        hubLink.style.color = "inherit";
+        hubLink.style.textDecoration = "none";
+        hubLink.style.borderBottom = "2px solid #ddd";
+        hubLink.style.paddingBottom = "2px";
+        
+        hubLink.addEventListener("mouseover", function() { this.style.borderBottomColor = "#3a7bd5"; });
+        hubLink.addEventListener("mouseout", function() { this.style.borderBottomColor = "#ddd"; });
+        
+        groupTitle.appendChild(hubLink);
+        groupSection.appendChild(groupTitle);
+        
+        var grid = document.createElement("div");
+        grid.className = "link-card-grid";
+        
+        group.links.forEach((node) => {
+            let fullData = typeof page_data !== 'undefined' ? page_data.find(p => p.url === node.url || decodeURI(p.url) === decodeURI(node.url)) : null;
+            let cardData = fullData || { url: node.url, title: node.label };
+            let card = createCard(cardData);
+            grid.appendChild(card);
+        });
+        
+        groupSection.appendChild(grid);
+        container.appendChild(groupSection);
+    });
 }
