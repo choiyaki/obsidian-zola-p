@@ -32,15 +32,15 @@ if [[ $PYTHON_ERROR =~ "ModuleNotFoundError" ]]; then
 	exit 1
 fi
 
-# Check that the vault got set
-if [[ -z "${VAULT}" ]]; then
-	if [[ -f ".vault_path" ]]; then
-		export VAULT=$(cat .vault_path)
-	else
-		echo "Path to the obsidian vault is not set, please set the path using in the $(.vault_path) file or $VAULT env variable"
-		exit 1
-	fi
+# Fetch the vault from the Published repository
+if [ ! -d "Published" ]; then
+	git clone https://github.com/choiyaki/Published.git Published
+else
+	cd Published
+	git pull origin main
+	cd ..
 fi
+export VAULT="Published"
 
 # Pull environment variables from the vault's netlify.toml when building (by generating env.sh to be sourced)
 python3 env.py
