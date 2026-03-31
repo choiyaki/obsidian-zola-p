@@ -98,12 +98,18 @@ body.home, body.home main {
 
 @media (max-width: 768px) {
   body.home {
-    padding: 1rem 0.25rem; /* 画面横ギリギリまで広げるためパディングを減らす */
+    padding: 1rem 0; /* 画面枠のpaddingをゼロに近づける */
+  }
+  
+  /* Bootstrapのコンテナ側の余白もモバイル時は削る */
+  body.home .container, body.home .content {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
   }
   
   .home-card-grid {
     grid-template-columns: repeat(2, 1fr); /* モバイルは2列 */
-    gap: 8px; /* 隙間を縮小 */
+    gap: 4px; /* 隙間をさらに縮小してギリギリまで広げる */
   }
 
   .home-card {
@@ -166,6 +172,7 @@ body.home, body.home main {
   white-space: normal;
   word-break: break-all;
   flex-shrink: 0; /* サイズ制約下でタイトル枠が潰れるのを防ぐ */
+  max-height: calc(4.2em + 12px); /* 4行目の上部が見える現象をパディング含めて確実にカットする */
 }
 
 .home-card .home-card-body {
