@@ -82,15 +82,26 @@ document.addEventListener("DOMContentLoaded", function() {
     const body = document.createElement("div");
     body.className = "home-card-body";
     
-    // Snippet
-    if (page.content) {
+    if (page.thumbnail) {
+      const imgContainer = document.createElement("div");
+      imgContainer.className = "home-card-thumbnail-container";
+      
+      const img = document.createElement("img");
+      img.src = page.thumbnail;
+      img.className = "home-card-thumbnail";
+      img.onerror = function() { this.style.display = 'none'; };
+      
+      imgContainer.appendChild(img);
+      body.appendChild(imgContainer);
+    } else if (page.content) {
+      // Snippet
       const snippet = document.createElement("div"); // Use div to hold block content
       snippet.className = "home-card-snippet text-muted";
       snippet.style.fontSize = "0.85rem";
       snippet.style.lineHeight = "1.4";
       snippet.style.margin = "0 0 12px 0";
       snippet.style.display = "-webkit-box";
-      snippet.style.webkitLineClamp = "4";
+      snippet.style.webkitLineClamp = "8";
       snippet.style.webkitBoxOrient = "vertical";
       snippet.style.overflow = "hidden";
       buildSnippetDOM(page.content, snippet);
@@ -100,7 +111,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // Meta (Date)
     const meta = document.createElement("div");
     meta.className = "home-card-meta text-muted mt-auto";
-    meta.style.fontSize = "0.75rem";
+    meta.style.fontSize = "0.7rem";
+    meta.style.display = "none"; // Hide date to match Cosense/Scrapbox style
     meta.textContent = `Updated: ${formatDate(page.modified)}`;
     body.appendChild(meta);
 

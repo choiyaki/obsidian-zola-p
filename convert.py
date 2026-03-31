@@ -42,14 +42,6 @@ if __name__ == "__main__":
                 except Exception:
                     created_tf = doc_path.modified.timestamp()
                 
-                page_meta.append({
-                    "url": doc_path.abs_url,
-                    "title": doc_path.page_title,
-                    "modified": doc_path.modified.timestamp(),
-                    "created": created_tf,
-                    "content": "".join(doc_path.content),
-                })
-
                 content = doc_path.content
                 parsed_lines: List[str] = []
                 for line in content:
@@ -61,6 +53,24 @@ if __name__ == "__main__":
                     parsed_lines.append(parsed_line)
 
                     edges.extend([doc_path.edge(rel_path) for rel_path in linked])
+
+                full_content = "\x0a".join(parsed_lines)
+                thumbnail = None
+                img_match = re.search(r'!\[.*?\]\((.*?)\)|<img[^>]+src=["\'](.*?)["\']', full_content)
+                if img_match:
+                    possible_url = img_match.group(1) or img_match.group(2)
+                    if not possible_url.startswith("http") and not possible_url.startswith("/"):
+                        possible_url = f"/docs/{possible_url}"
+                    thumbnail = possible_url
+
+                page_meta.append({
+                    "url": doc_path.abs_url,
+                    "title": doc_path.page_title,
+                    "modified": doc_path.modified.timestamp(),
+                    "created": created_tf,
+                    "content": full_content,
+                    "thumbnail": thumbnail,
+                })
 
                 content = [
                     "---",
