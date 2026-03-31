@@ -279,7 +279,7 @@ class Settings:
     # Default options
     options: Dict[str, Optional[str]] = {
         "SITE_URL": None,
-        "SITE_TITLE": "Someone's Second 🧠",
+        "SITE_TITLE": "📝Choiyaki",
         "TIMEZONE": "Asia/Hong_Kong",
         "REPO_URL": None,
         "LANDING_PAGE": None,

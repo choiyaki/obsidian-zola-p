@@ -25,36 +25,17 @@
 <div class="home">
   <div class="wrap container" role="document">
     <div class="content py-4">
-      <div class="home-toolbar mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div class="search-box flex-grow-1" style="max-width: 400px;">
-          <input type="text" id="home-search-input" class="form-control form-control-lg" placeholder="Search pages..." autocomplete="off">
-        </div>
-        <div class="sort-box">
-          <select id="home-sort-select" class="form-select form-select-lg">
-            <option value="updated">更新順 (Recently Updated)</option>
-            <option value="created">作成順 (Recently Created)</option>
-            <option value="title">タイトル順 (Alphabetical)</option>
-          </select>
-        </div>
-      </div>
+
       
       <div id="home-card-container" class="home-card-grid"></div>
     </div>
   </div>
-
-{% if config.extra.home_graph %}
-  <div id="graph" style="margin-top: 40px; border-top: 1px solid var(--border-color);"></div>
-{% endif %}
 
 </div>
 
 {% block footer %}
   {{ macros_footer::footer() }}
 {% endblock footer %}
-
-{% if config.extra.home_graph %}
-  {{ macros_graph::graph_js() }}
-{% endif %}
 
 <script src="{{ get_url(path="js/page_data.js", trailing_slash=false) | safe }}"></script>
 <script src="{{ get_url(path="js/home.js", trailing_slash=false) | safe }}"></script>

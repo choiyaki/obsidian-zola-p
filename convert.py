@@ -47,6 +47,7 @@ if __name__ == "__main__":
                     "title": doc_path.page_title,
                     "modified": doc_path.modified.timestamp(),
                     "created": created_tf,
+                    "content": "".join(doc_path.content),
                 })
 
                 content = doc_path.content

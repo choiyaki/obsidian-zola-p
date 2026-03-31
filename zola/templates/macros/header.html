@@ -36,13 +36,20 @@
 				{% endif %}
 			</ul>
 			<div class="break order-6 d-md-none"></div>
-			{% if config.build_search_index %}
-				<form class="navbar-form flex-grow-1 order-7 order-md-3">
-					<input id="userinput" class="form-control is-search" type="search" placeholder="Search docs..."
-						aria-label="Search docs..." autocomplete="off">
-					<div id="suggestions" class="shadow bg-white rounded"></div>
-				</form>
-			{% endif %}
+			<form class="navbar-form mx-auto order-7 order-md-3 d-flex align-items-center gap-2" style="width: 100%; max-width: 600px; position: relative; margin-top: 0; margin-left: auto; margin-right: auto;">
+				<style>body:not(.home) .home-only { display: none !important; }</style>
+				<div style="flex-grow: 1; position: relative;">
+					<input id="userinput" class="form-control is-search" type="search" placeholder="Search..." aria-label="Search..." autocomplete="off">
+					<div id="suggestions" class="shadow bg-white rounded" style="position: absolute; width: 100%; z-index: 1000; top: 100%;"></div>
+				</div>
+				<div class="sort-box home-only" style="min-width: 180px;">
+					<select id="home-sort-select" class="form-select text-truncate">
+						<option value="updated">更新順 (Recently Updated)</option>
+						<option value="created">作成順 (Recently Created)</option>
+						<option value="title">タイトル順 (Alphabetical)</option>
+					</select>
+				</div>
+			</form>
 		</div>
 	</div>
 </header>

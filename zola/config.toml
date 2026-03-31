@@ -1,12 +1,11 @@
 base_url = "___SITE_URL___"
 title = "___SITE_TITLE___"
 
-build_search_index = true
+build_search_index = false
 compile_sass = true
-default_language = "en"
-generate_feed = true
+default_language = "ja"
+generate_feeds = true
 minify_html = true
-render_emoji = true
 taxonomies = []
 
 [slugify]
@@ -27,7 +26,7 @@ page_graph = "___PAGE_GRAPH___"
 page_list = "___PAGE_LIST___"
 title_addition = "___SITE_TITLE_TAB___"
 
-language_code = "en-US"
+language_code = "ja-JP"
 theme_color = "#fff"
 
 ganalytics = "___GANALYTICS___"

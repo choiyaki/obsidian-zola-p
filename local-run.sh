@@ -1,19 +1,19 @@
 #!/bin/bash
 
 # Check for python-is-python3 installed
-if ! command -v python &>/dev/null; then
-	echo "It appears you do not have python-is-python3 installed"
+if ! command -v python3 &>/dev/null; then
+	echo "It appears you do not have python3 installed"
 	exit 1
 fi
 
 # Check for zola being installed
-if ! command -v zola &>/dev/null; then
-	echo "zola could not be found please install it from https://www.getzola.org/documentation/getting-started/installation"
+if [ ! -f "bin/zola" ]; then
+	echo "zola could not be found please run the curl download command provided."
 	exit 1
 fi
 
 # Check for correct slugify package
-PYTHON_ERROR=$(eval "python -c 'from slugify import slugify; print(slugify(\"Test String One\"))'" 2>&1)
+PYTHON_ERROR=$(eval "python3 -c 'from slugify import slugify; print(slugify(\"Test String One\"))'" 2>&1)
 
 if [[ $PYTHON_ERROR != "test-string-one" ]]; then
 	if [[ $PYTHON_ERROR =~ "NameError" ]]; then
@@ -25,7 +25,7 @@ if [[ $PYTHON_ERROR != "test-string-one" ]]; then
 fi
 
 # Check for rtoml package
-PYTHON_ERROR=$(eval "python -c 'import rtoml'" 2>&1)
+PYTHON_ERROR=$(eval "python3 -c 'import rtoml'" 2>&1)
 
 if [[ $PYTHON_ERROR =~ "ModuleNotFoundError" ]]; then
 	echo "It appears you do not have rtoml installed. Install it with 'pip install rtoml'"
@@ -43,11 +43,7 @@ if [[ -z "${VAULT}" ]]; then
 fi
 
 # Pull environment variables from the vault's netlify.toml when building (by generating env.sh to be sourced)
-python env.py
-
-# Set the site and repo url as local since locally built
-export SITE_URL=local
-export REPO_URL=local
+python3 env.py
 
 # Remove previous build and sync Zola template contents
 rm -rf build
@@ -63,7 +59,7 @@ else
 fi
 
 # Run conversion script
-source env.sh && python convert.py && rm env.sh
+source env.sh && export SITE_URL=local && export REPO_URL=local && python3 convert.py && rm env.sh
 
 # Serve Zola site
-zola --root=build serve
+bin/zola --root=build serve
