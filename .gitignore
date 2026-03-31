@@ -166,3 +166,5 @@ backup
 data
 public
 build
+Published/
+__netlify_test/
