@@ -97,9 +97,17 @@ body.home, body.home main {
 }
 
 @media (max-width: 768px) {
+  body.home {
+    padding: 1rem 0.25rem; /* 画面横ギリギリまで広げるためパディングを減らす */
+  }
+  
   .home-card-grid {
     grid-template-columns: repeat(2, 1fr); /* モバイルは2列 */
     gap: 8px; /* 隙間を縮小 */
+  }
+
+  .home-card {
+    aspect-ratio: 1 / 1.02 !important; /* スニペットが崩れない程度のほぼ正方形 */
   }
 }
 
@@ -115,7 +123,7 @@ body.home, body.home main {
   text-decoration: none !important;
   color: inherit !important;
   transition: transform 0.2s, box-shadow 0.2s;
-  min-height: 160px; /* カード全体の高さを少し高く */
+  aspect-ratio: 1 / 1.15; /* 強制的に縦横比を固定して全カードを統一 */
   position: relative;
 }
 
@@ -130,12 +138,14 @@ body.home, body.home main {
   display: flex;
   overflow: hidden;
   border-radius: 4px; /* 少し角丸に */
+  min-height: 0; /* 子要素でflexが拡大するのを防ぐ */
 }
 
 .home-card-thumbnail {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* はみ出た部分は切り取り */
+  object-position: center; /* 中央を中心にトリミング */
 }
 
 .home-card .home-card-title {
@@ -162,6 +172,7 @@ body.home, body.home main {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  min-height: 0; /* これでテキストや画像の拡大によるカード伸長を食い止める */
 }
 
 /* スニペットの文字サイズと行間さらに調整 */
