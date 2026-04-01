@@ -13,6 +13,35 @@ from utils import (
     write_settings,
 )
 
+import subprocess
+
+
+def git_commit_time(path: str, first_commit: bool = False) -> int:
+    """Returns Unix timestamp of the first or last commit that touched a file."""
+    try:
+        if first_commit:
+            cmd = [
+                "git",
+                "log",
+                "--reverse",
+                "--format=%ct",
+                "--",
+                path,
+            ]
+        else:
+            cmd = ["git", "log", "-1", "--format=%ct", "--", path]
+
+        out = subprocess.check_output(cmd, cwd=str(raw_dir), stderr=subprocess.DEVNULL)
+        timestamp = out.decode("utf-8").strip().splitlines()
+        if not timestamp:
+            raise ValueError("No commit history")
+        return int(timestamp[0])
+    except Exception:
+        # Fallback to filesystem timestamps if git data not available
+        st = os.stat(path)
+        return int(getattr(st, "st_mtime", st.st_mtime))
+
+
 if __name__ == "__main__":
 
     Settings.parse_env()
@@ -36,11 +65,9 @@ if __name__ == "__main__":
                 nodes[doc_path.abs_url] = doc_path.page_title
                 
                 try:
-                    import os
-                    stat = os.stat(doc_path.old_path)
-                    created_tf = getattr(stat, 'st_birthtime', stat.st_mtime)
+                    created_tf = git_commit_time(str(doc_path.old_path), first_commit=True)
                 except Exception:
-                    created_tf = doc_path.modified.timestamp()
+                    created_tf = int(doc_path.modified.timestamp())
                 
                 content = doc_path.content
                 parsed_lines: List[str] = []
