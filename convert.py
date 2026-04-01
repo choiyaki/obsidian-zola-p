@@ -1,4 +1,7 @@
+import os
 import re
+import subprocess
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 from utils import (
@@ -40,6 +43,46 @@ def git_commit_time(path: str, first_commit: bool = False) -> int:
         # Fallback to filesystem timestamps if git data not available
         st = os.stat(path)
         return int(getattr(st, "st_mtime", st.st_mtime))
+
+
+def get_vault_file_path(raw_file_path: Path) -> Path:
+    """Map exported __docs path to the original vault path when available."""
+    vault = os.environ.get("VAULT")
+    if not vault:
+        return None
+
+    try:
+        # raw_file_path is under raw_dir (build/__docs/...) during conversion.
+        rel = raw_file_path.relative_to(raw_dir)
+    except Exception:
+        return None
+
+    return Path(vault) / rel
+
+
+def git_timestamp(path: Path, first: bool = False) -> int:
+    """Get commit timestamp for file from git history in VAULT if possible."""
+    if not path:
+        return None
+
+    vault_file = get_vault_file_path(path)
+    if not vault_file or not vault_file.exists():
+        return None
+
+    try:
+        cmd = ["git", "-C", str(Path(os.environ.get("VAULT"))), "log"]
+        if first:
+            cmd += ["--reverse"]
+        cmd += ["--format=%ct", "--", str(vault_file)]
+
+        output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).splitlines()
+        if not output:
+            return None
+
+        value = output[0] if first else output[-1]
+        return int(value.strip())
+    except Exception:
+        return None
 
 
 if __name__ == "__main__":
