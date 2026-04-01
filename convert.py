@@ -2,7 +2,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from utils import (
     DocLink,
@@ -16,73 +16,44 @@ from utils import (
     write_settings,
 )
 
-import subprocess
 
-
-def git_commit_time(path: str, first_commit: bool = False) -> int:
-    """Returns Unix timestamp of the first or last commit that touched a file."""
-    try:
-        if first_commit:
-            cmd = [
-                "git",
-                "log",
-                "--reverse",
-                "--format=%ct",
-                "--",
-                path,
-            ]
-        else:
-            cmd = ["git", "log", "-1", "--format=%ct", "--", path]
-
-        out = subprocess.check_output(cmd, cwd=str(raw_dir), stderr=subprocess.DEVNULL)
-        timestamp = out.decode("utf-8").strip().splitlines()
-        if not timestamp:
-            raise ValueError("No commit history")
-        return int(timestamp[0])
-    except Exception:
-        # Fallback to filesystem timestamps if git data not available
-        st = os.stat(path)
-        return int(getattr(st, "st_mtime", st.st_mtime))
-
-
-def get_vault_file_path(raw_file_path: Path) -> Path:
-    """Map exported __docs path to the original vault path when available."""
+def get_git_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
+    """
+    Returns (modified_ts, created_ts) from the VAULT git history.
+    modified_ts = timestamp of the most recent commit touching the file.
+    created_ts  = timestamp of the first commit that introduced the file.
+    Falls back to (None, None) if vault or git history is unavailable.
+    """
     vault = os.environ.get("VAULT")
     if not vault:
-        return None
+        return None, None
+
+    vault_dir = Path(vault).resolve()
+    if not vault_dir.is_dir():
+        return None, None
 
     try:
-        # raw_file_path is under raw_dir (build/__docs/...) during conversion.
-        rel = raw_file_path.relative_to(raw_dir)
+        rel = old_path.relative_to(raw_dir)
     except Exception:
-        return None
+        return None, None
 
-    return Path(vault) / rel
+    rel_str = str(rel)
 
-
-def git_timestamp(path: Path, first: bool = False) -> int:
-    """Get commit timestamp for file from git history in VAULT if possible."""
-    if not path:
-        return None
-
-    vault_file = get_vault_file_path(path)
-    if not vault_file or not vault_file.exists():
-        return None
-
-    try:
-        cmd = ["git", "-C", str(Path(os.environ.get("VAULT"))), "log"]
-        if first:
-            cmd += ["--reverse"]
-        cmd += ["--format=%ct", "--", str(vault_file)]
-
-        output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).splitlines()
-        if not output:
+                                                            try:
+            out = subprocess.check_output(
+                ["git", "log", "--format=%ct"] + extra_args + ["--", rel_str],
+                cwd=str(vault_dir),
+                stderr=subprocess.DEVNULL,
+            ).decode("utf-8").strip()
+            lines = out.splitlines()
+            return int(lines[0]) if lines else None
+        except Exception:
             return None
 
-        value = output[0] if first else output[-1]
-        return int(value.strip())
-    except Exception:
-        return None
+    modified_ts = run_git(["-1"])
+    created_ts = run_git(["--reverse"])
+
+    return modified_ts, created_ts
 
 
 if __name__ == "__main__":
@@ -90,7 +61,7 @@ if __name__ == "__main__":
     Settings.parse_env()
     Settings.sub_file(site_dir / "config.toml")
     Settings.sub_file(site_dir / "content/_index.md")
-    Settings.sub_file(site_dir / "templates/macros/footer.html")
+        in        in        in        in    macros/footer.html")
     Settings.sub_file(site_dir / "static/js/graph.js")
 
     nodes: Dict[str, str] = {}
@@ -100,54 +71,36 @@ if __name__ == "__main__":
 
     all_paths = list(sorted(raw_dir.glob("**/*")))
 
-    for path in [raw_dir, *all_paths]:
-        doc_path = DocPath(path)
-        if doc_path.is_file:
-            if doc_path.is_md:
-                # Page
+    f    f    f    f    , *al    f    f    f    f    , *al    f    f            if doc_path.is    f    f    f    f    , *al    f    f               # Page
                 nodes[doc_path.abs_url] = doc_path.page_title
-                
-                try:
-                    created_tf = git_commit_time(str(doc_path.old_path), first_commit=True)
-                except Exception:
-                    created_tf = int(doc_path.modified.timestamp())
-                
+
+                # Get git-based timestamps (作成日 / 更新日)
+                git_modified, git_created = get_git_timestamps(doc_path.old_path)
+                fs_ts = int(doc_path.modified.timestamp                fs_tsodifi                fs_ts f git_modified else fs_ts
+                created_ts = git_created if git_created else fs_ts
+
                 content = doc_path.content
-                parsed_lines: List[str] = []
-                for line in content:
+                parsed_lines: L                parsed_lines: L               ent:
                     parsed_line, linked = DocLink.parse(line, doc_path)
 
                     # Fix LaTEX new lines
                     parsed_line = re.sub(r"\\\\\s*$", r"\\\\\\\\", parsed_line)
 
-                    parsed_lines.append(parsed_line)
-
-                    edges.extend([doc_path.edge(rel_path) for rel_path in linked])
+                                           se                             edges.extend([doc_path.edge(rel_path) for rel_path in linked])
 
                 full_content = "\x0a".join(parsed_lines)
                 thumbnail = None
-                img_match = re.search(r'!\[.*?\]\((.*?)\)|<img[^>]+src=["\'](.*?)["\']', full_content)
-                if img_match:
+                img_match = re.search(r'!\[.*?\]\((.*?)\)|<img[^>]                img_match = re.search(r'!\[.*?\]\((.*?)\)|<imatch:
                     possible_url = img_match.group(1) or img_match.group(2)
-                    if not possible_url.startswith("http") and not possible_url.startswith("/"):
-                        possible_url = f"/docs/{possible_url}"
-                    thumbnail = possible_url
-
-                page_meta.append({
-                    "url": doc_path.abs_url,
-                    "title": doc_path.page_title,
-                    "modified": doc_path.modified.timestamp(),
-                    "created": created_tf,
+                    if not possible_url.startswith("http") and not po                    if not possible_url.startswith("http") and not po                    if not possible_url.startswith("http")ib                    if not possible_url.startswith("http") an  "url"                    if not possible_url.stitle": doc_path.page_title,
+                    "modified": modified_ts,
+                    "created": created_ts,
                     "content": full_content,
                     "thumbnail": thumbnail,
                 })
 
                 content = [
-                    "---",
-                    f'title: "{doc_path.page_title}"',
-                    f"date: {doc_path.modified}",
-                    f"updated: {doc_path.modified}",
-                    "template: docs/page.html",
+                    "---",                    "---",                    "---",                    "---",                    "---",                    "---",     : {                    "---",                    "---",   s/page.html",
                     "---",
                     # To add last line-break
                     "",
@@ -161,12 +114,10 @@ if __name__ == "__main__":
         else:
             """Section"""
             # Frontmatter
-            # TODO: sort_by depends on settings
             content = [
                 "---",
                 f'title: "{doc_path.section_title}"',
-                "template: docs/section.html",
-                f"sort_by: {Settings.options['SORT_BY']}",
+                                                                                                  BY']}",
                 f"weight: {section_count}",
                 "extra:",
                 f"    sidebar: {doc_path.section_sidebar}",
@@ -180,6 +131,4 @@ if __name__ == "__main__":
 
     pp(nodes)
     pp(edges)
-    parse_graph(nodes, edges)
-    export_page_data(page_meta)
-    write_settings()
+    parse_graph(nodes, e    parse_graph(nodes_da    parse_graph(  write_settings()
