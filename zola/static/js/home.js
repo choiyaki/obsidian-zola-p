@@ -20,6 +20,20 @@ document.addEventListener("DOMContentLoaded", function() {
     const d = new Date(timestamp * 1000);
     return d.toLocaleDateString();
   }
+
+  // Helper to safely parse date values from page metadata
+  function parseTimestamp(value) {
+    if (typeof value === "number") {
+      return value;
+    }
+    if (typeof value === "string") {
+      const num = Number(value);
+      if (!Number.isNaN(num)) return num;
+      const dt = Date.parse(value);
+      if (!Number.isNaN(dt)) return dt / 1000;
+    }
+    return 0;
+  }
   
   // Helper to build snippet securely with blue link text and no URLs
   function buildSnippetDOM(content, container) {
@@ -189,12 +203,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Sort logic
   function sortPages() {
-    if (!sortSelect) return;
-    const sortBy = sortSelect.value;
+    const sortBy = sortSelect ? sortSelect.value : "updated";
+
     if (sortBy === "updated") {
-      pages.sort((a, b) => b.modified - a.modified);
+      pages.sort((a, b) => parseTimestamp(b.modified) - parseTimestamp(a.modified));
     } else if (sortBy === "created") {
-      pages.sort((a, b) => b.created - a.created);
+      pages.sort((a, b) => parseTimestamp(b.created) - parseTimestamp(a.created));
     } else if (sortBy === "title") {
       pages.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
     }
