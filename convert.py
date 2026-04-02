@@ -47,28 +47,31 @@ def get_git_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
     except Exception:
         return None, None
 
-    # Path used in git log must be relative to the git root.
-    if git_root_dir == content_root_dir:
-        git_rel = rel
-    else:
+    # Netlify build moves vault files under __obsidian at runtime, but git history
+    # still often uses original repo-root paths. Try both pathspec candidates.
+    candidates = [str(rel)]
+    if git_root_dir != content_root_dir:
         try:
-            git_rel = content_root_dir.relative_to(git_root_dir) / rel
+            prefixed = str(content_root_dir.relative_to(git_root_dir) / rel)
+            if prefixed not in candidates:
+                candidates.append(prefixed)
         except Exception:
-            return None, None
-
-    rel_str = str(git_rel)
+            pass
 
     def run_git(extra_args: list) -> Optional[int]:
-        try:
-            out = subprocess.check_output(
-                ["git", "log", "--format=%ct"] + extra_args + ["--", rel_str],
-                cwd=str(git_root_dir),
-                stderr=subprocess.DEVNULL,
-            ).decode("utf-8").strip()
-            lines = out.splitlines()
-            return int(lines[0]) if lines else None
-        except Exception:
-            return None
+        for rel_str in candidates:
+            try:
+                out = subprocess.check_output(
+                    ["git", "log", "--format=%ct"] + extra_args + ["--", rel_str],
+                    cwd=str(git_root_dir),
+                    stderr=subprocess.DEVNULL,
+                ).decode("utf-8").strip()
+                lines = out.splitlines()
+                if lines:
+                    return int(lines[0])
+            except Exception:
+                continue
+        return None
 
     modified_ts = run_git(["-1"])
     created_ts = run_git(["--reverse"])
