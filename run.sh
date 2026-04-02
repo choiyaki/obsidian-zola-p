@@ -16,6 +16,8 @@ rsync -a __site/content/ __site/build/content
 
 # Use obsidian-export to export markdown content from obsidian
 mkdir -p __site/build/content/docs __site/build/__docs
+export VAULT_CONTENT_ROOT="__obsidian"
+export VAULT_GIT_ROOT="."
 if [ -z "$STRICT_LINE_BREAKS" ]; then
 	__site/bin/obsidian-export --frontmatter=never --hard-linebreaks --no-recursive-embeds __obsidian __site/build/__docs
 else

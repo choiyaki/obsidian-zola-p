@@ -24,12 +24,22 @@ def get_git_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
     created_ts  = first commit timestamp for the file.
     Falls back to (None, None) when vault/git history is unavailable.
     """
-    vault = os.environ.get("VAULT")
-    if not vault:
+    content_root = os.environ.get("VAULT_CONTENT_ROOT") or os.environ.get("VAULT")
+    if not content_root:
         return None, None
 
-    vault_dir = Path(vault).resolve()
-    if not vault_dir.is_dir():
+    content_root_dir = Path(content_root).resolve()
+    if not content_root_dir.is_dir():
+        return None, None
+
+    git_root = os.environ.get("VAULT_GIT_ROOT")
+    if git_root:
+        git_root_dir = Path(git_root).resolve()
+    else:
+        # Local run fallback: VAULT itself is typically a git repo.
+        git_root_dir = content_root_dir
+
+    if not (git_root_dir / ".git").exists():
         return None, None
 
     try:
@@ -37,13 +47,22 @@ def get_git_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
     except Exception:
         return None, None
 
-    rel_str = str(rel)
+    # Path used in git log must be relative to the git root.
+    if git_root_dir == content_root_dir:
+        git_rel = rel
+    else:
+        try:
+            git_rel = content_root_dir.relative_to(git_root_dir) / rel
+        except Exception:
+            return None, None
+
+    rel_str = str(git_rel)
 
     def run_git(extra_args: list) -> Optional[int]:
         try:
             out = subprocess.check_output(
                 ["git", "log", "--format=%ct"] + extra_args + ["--", rel_str],
-                cwd=str(vault_dir),
+                cwd=str(git_root_dir),
                 stderr=subprocess.DEVNULL,
             ).decode("utf-8").strip()
             lines = out.splitlines()
