@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -79,6 +80,107 @@ def get_git_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
     return modified_ts, created_ts
 
 
+def _parse_timestamp(value: str) -> Optional[int]:
+    raw = value.strip().strip('"').strip("'")
+    if not raw:
+        return None
+
+    # Numeric unix timestamps (seconds / milliseconds)
+    if re.fullmatch(r"\d+(\.\d+)?", raw):
+        num = float(raw)
+        if num > 1_000_000_000_000:  # milliseconds
+            num = num / 1000.0
+        return int(num)
+
+    normalized = raw.replace("Z", "+00:00")
+    fmts = [
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y/%m/%d %H:%M:%S",
+        "%Y/%m/%d %H:%M",
+        "%Y-%m-%d",
+        "%Y/%m/%d",
+    ]
+
+    try:
+        return int(datetime.fromisoformat(normalized).timestamp())
+    except Exception:
+        pass
+
+    for fmt in fmts:
+        try:
+            return int(datetime.strptime(raw, fmt).timestamp())
+        except Exception:
+            continue
+
+    return None
+
+
+def get_yaml_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
+    """
+    Read front matter from original source file and return (updated_ts, created_ts).
+    Priority keys:
+      - created: created
+      - updated: update, updated
+    """
+    content_root = os.environ.get("VAULT_CONTENT_ROOT") or os.environ.get("VAULT")
+    if not content_root:
+        return None, None
+
+    content_root_dir = Path(content_root).resolve()
+    if not content_root_dir.is_dir():
+        return None, None
+
+    try:
+        rel = old_path.relative_to(raw_dir)
+    except Exception:
+        return None, None
+
+    source_file = content_root_dir / rel
+    if not source_file.exists() or not source_file.is_file():
+        return None, None
+
+    try:
+        text = source_file.read_text(encoding="utf-8")
+    except Exception:
+        return None, None
+
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None, None
+
+    end_idx = None
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            end_idx = i
+            break
+
+    if end_idx is None:
+        return None, None
+
+    frontmatter = lines[1:end_idx]
+    created_val = None
+    updated_val = None
+
+    for line in frontmatter:
+        m = re.match(r"^\s*([A-Za-z_][\w-]*)\s*:\s*(.*?)\s*$", line)
+        if not m:
+            continue
+        key = m.group(1).strip().lower()
+        val = m.group(2)
+
+        if key == "created" and created_val is None:
+            created_val = _parse_timestamp(val)
+        elif key in ("update", "updated") and updated_val is None:
+            updated_val = _parse_timestamp(val)
+
+    return updated_val, created_val
+
+
+def ts_to_iso(ts: int) -> str:
+    return datetime.fromtimestamp(ts).astimezone().isoformat(timespec="seconds")
+
+
 if __name__ == "__main__":
 
     Settings.parse_env()
@@ -102,10 +204,11 @@ if __name__ == "__main__":
                 nodes[doc_path.abs_url] = doc_path.page_title
 
                 # Get git-based timestamps (作成日 / 更新日)
+                yaml_modified, yaml_created = get_yaml_timestamps(doc_path.old_path)
                 git_modified, git_created = get_git_timestamps(doc_path.old_path)
                 fs_ts = int(doc_path.modified.timestamp())
-                modified_ts = git_modified if git_modified else fs_ts
-                created_ts = git_created if git_created else fs_ts
+                created_ts = yaml_created or git_created or fs_ts
+                modified_ts = yaml_modified or git_modified or created_ts
 
                 content = doc_path.content
                 parsed_lines: List[str] = []
@@ -140,8 +243,8 @@ if __name__ == "__main__":
                 content = [
                     "---",
                     f'title: "{doc_path.page_title}"',
-                    f"date: {doc_path.modified}",
-                    f"updated: {doc_path.modified}",
+                    f"date: {ts_to_iso(created_ts)}",
+                    f"updated: {ts_to_iso(modified_ts)}",
                     "template: docs/page.html",
                     "---",
                     # To add last line-break

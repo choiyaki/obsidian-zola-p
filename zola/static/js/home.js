@@ -3,6 +3,7 @@
 document.addEventListener("DOMContentLoaded", function() {
   const container = document.getElementById("home-card-container");
   const sortSelect = document.getElementById("home-sort-select");
+  const randomButton = document.getElementById("home-random-button");
 
   if (!container || typeof page_data === "undefined") return;
 
@@ -201,17 +202,31 @@ document.addEventListener("DOMContentLoaded", function() {
     setupObserver();
   }
 
-  // Sort logic
-  function sortPages() {
-    const sortBy = sortSelect ? sortSelect.value : "updated";
+  function shufflePages() {
+    for (let i = pages.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pages[i], pages[j]] = [pages[j], pages[i]];
+    }
+  }
 
-    if (sortBy === "updated") {
+  // Sort logic
+  function sortPages(modeOverride) {
+    const sortBy = modeOverride || (sortSelect ? sortSelect.value : "updated_desc");
+
+    if (sortBy === "updated_desc") {
       pages.sort((a, b) => parseTimestamp(b.modified) - parseTimestamp(a.modified));
-    } else if (sortBy === "created") {
+    } else if (sortBy === "updated_asc") {
+      pages.sort((a, b) => parseTimestamp(a.modified) - parseTimestamp(b.modified));
+    } else if (sortBy === "created_desc") {
       pages.sort((a, b) => parseTimestamp(b.created) - parseTimestamp(a.created));
+    } else if (sortBy === "created_asc") {
+      pages.sort((a, b) => parseTimestamp(a.created) - parseTimestamp(b.created));
     } else if (sortBy === "title") {
       pages.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    } else if (sortBy === "random") {
+      shufflePages();
     }
+
     renderAll();
   }
 
@@ -220,6 +235,12 @@ document.addEventListener("DOMContentLoaded", function() {
       sortSelect.addEventListener("change", sortPages);
   }
 
-  // Initial render (default sort is updated)
+  if (randomButton) {
+      randomButton.addEventListener("click", function() {
+          sortPages("random");
+      });
+  }
+
+  // Initial render (default sort is updated_desc)
   sortPages();
 });
