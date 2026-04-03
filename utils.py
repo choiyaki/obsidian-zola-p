@@ -50,6 +50,40 @@ def slugify_path(path: Union[str, Path], no_suffix: bool) -> Path:
         return path
 
 
+def sanitize_deploy_path(path: Union[str, Path], no_suffix: bool) -> Path:
+    """
+    Sanitizes path components so generated filenames are deploy-safe.
+    This is applied even when SLUGIFY is disabled.
+    """
+
+    path = Path(str(path))
+
+    # Characters commonly rejected by deploy systems / URLs.
+    # Keep Unicode letters but replace dangerous separators and controls.
+    invalid_chars = r'[<>:"\\|?*#@]'
+
+    def clean_component(name: str) -> str:
+        cleaned = re.sub(invalid_chars, "-", name)
+        cleaned = re.sub(r"[\x00-\x1f\x7f]", "", cleaned)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        cleaned = cleaned.rstrip(".")
+        return cleaned or "untitled"
+
+    if no_suffix:
+        parts = [clean_component(p) for p in path.parts]
+        return Path(*parts)
+
+    parent_parts = [clean_component(p) for p in path.parent.parts if p not in ("", ".")]
+    stem = clean_component(path.stem)
+    suffix = re.sub(invalid_chars, "", path.suffix)
+    if suffix and not suffix.startswith("."):
+        suffix = f".{suffix}"
+
+    if parent_parts:
+        return Path(*parent_parts) / f"{stem}{suffix}"
+    return Path(f"{stem}{suffix}")
+
+
 # ---------------------------------------------------------------------------- #
 #                               Document Classes                               #
 # ---------------------------------------------------------------------------- #
@@ -159,7 +193,10 @@ class DocPath:
                 self.old_rel_path.stem + "-nested" + self.old_rel_path.suffix
             )
 
-        self.new_rel_path = slugify_path(new_rel_path, not self.is_file)
+        self.new_rel_path = sanitize_deploy_path(
+            slugify_path(new_rel_path, not self.is_file),
+            not self.is_file,
+        )
         self.new_path = docs_dir / str(self.new_rel_path)
 
     # --------------------------------- Sections --------------------------------- #

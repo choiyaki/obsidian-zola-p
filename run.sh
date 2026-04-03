@@ -14,6 +14,57 @@ chmod +x __site/bin/obsidian-export
 rsync -a __site/zola/ __site/build
 rsync -a __site/content/ __site/build/content
 
+# Normalize YAML frontmatter keys that break obsidian-export (e.g. duplicate "created")
+python3 - <<'PY'
+from pathlib import Path
+
+root = Path("__obsidian")
+
+for p in root.rglob("*.md"):
+    try:
+        text = p.read_text(encoding="utf-8")
+    except Exception:
+        continue
+
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        continue
+
+    end_idx = None
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            end_idx = i
+            break
+    if end_idx is None:
+        continue
+
+    fm = lines[1:end_idx]
+    seen = set()
+    new_fm = []
+    changed = False
+
+    for line in fm:
+        s = line.strip()
+        if not s or s.startswith("#"):
+            new_fm.append(line)
+            continue
+        if ":" not in line:
+            new_fm.append(line)
+            continue
+
+        key = line.split(":", 1)[0].strip().lower()
+        if key in seen:
+            changed = True
+            continue
+
+        seen.add(key)
+        new_fm.append(line)
+
+    if changed:
+        rebuilt = ["---", *new_fm, "---", *lines[end_idx + 1 :]]
+        p.write_text("\n".join(rebuilt) + "\n", encoding="utf-8")
+PY
+
 # Use obsidian-export to export markdown content from obsidian
 mkdir -p __site/build/content/docs __site/build/__docs
 export VAULT_CONTENT_ROOT="__obsidian"
