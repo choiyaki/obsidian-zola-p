@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 pip install python-slugify
 
 # Avoid copying over netlify.toml (will ebe exposed to public API)
@@ -69,14 +71,30 @@ PY
 mkdir -p __site/build/content/docs __site/build/__docs
 export VAULT_CONTENT_ROOT="__obsidian"
 export VAULT_GIT_ROOT="."
+SOURCE_MD_COUNT=$(find __obsidian -type f -name '*.md' | wc -l | tr -d ' ')
 if [ -z "$STRICT_LINE_BREAKS" ]; then
 	__site/bin/obsidian-export --frontmatter=never --hard-linebreaks --no-recursive-embeds __obsidian __site/build/__docs
 else
 	__site/bin/obsidian-export --frontmatter=never --no-recursive-embeds __obsidian __site/build/__docs
 fi
 
+EXPORTED_MD_COUNT=$(find __site/build/__docs -type f -name '*.md' | wc -l | tr -d ' ')
+echo "Source markdown files: $SOURCE_MD_COUNT"
+echo "Exported markdown files: $EXPORTED_MD_COUNT"
+if [ "$EXPORTED_MD_COUNT" -ne "$SOURCE_MD_COUNT" ]; then
+    echo "ERROR: obsidian-export exported only $EXPORTED_MD_COUNT of $SOURCE_MD_COUNT markdown files."
+    exit 1
+fi
+
 # Run conversion script
 python __site/convert.py
+
+CONVERTED_MD_COUNT=$(find __site/build/content/docs -type f -name '*.md' | wc -l | tr -d ' ')
+echo "Converted markdown files: $CONVERTED_MD_COUNT"
+if [ "$CONVERTED_MD_COUNT" -ne "$EXPORTED_MD_COUNT" ]; then
+    echo "ERROR: convert.py produced only $CONVERTED_MD_COUNT of $EXPORTED_MD_COUNT markdown files."
+    exit 1
+fi
 
 # Build Zola site
 zola --root __site/build build --output-dir public

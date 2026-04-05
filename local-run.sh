@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # Check for python-is-python3 installed
 if ! command -v python3 &>/dev/null; then
 	echo "It appears you do not have python3 installed"
@@ -52,14 +54,30 @@ rsync -a content/ build/content
 
 # Use obsidian-export to export markdown content from obsidian
 mkdir -p build/content/docs build/__docs
+SOURCE_MD_COUNT=$(find "$VAULT" -type f -name '*.md' | wc -l | tr -d ' ')
 if [ -z "$STRICT_LINE_BREAKS" ]; then
 	bin/obsidian-export --frontmatter=never --hard-linebreaks --no-recursive-embeds $VAULT build/__docs
 else
 	bin/obsidian-export --frontmatter=never --no-recursive-embeds $VAULT build/__docs
 fi
 
+EXPORTED_MD_COUNT=$(find build/__docs -type f -name '*.md' | wc -l | tr -d ' ')
+echo "Source markdown files: $SOURCE_MD_COUNT"
+echo "Exported markdown files: $EXPORTED_MD_COUNT"
+if [ "$EXPORTED_MD_COUNT" -ne "$SOURCE_MD_COUNT" ]; then
+	echo "ERROR: obsidian-export exported only $EXPORTED_MD_COUNT of $SOURCE_MD_COUNT markdown files."
+	exit 1
+fi
+
 # Run conversion script
 source env.sh && export SITE_URL=local && export REPO_URL=local && python3 convert.py && rm env.sh
+
+CONVERTED_MD_COUNT=$(find build/content/docs -type f -name '*.md' | wc -l | tr -d ' ')
+echo "Converted markdown files: $CONVERTED_MD_COUNT"
+if [ "$CONVERTED_MD_COUNT" -ne "$EXPORTED_MD_COUNT" ]; then
+	echo "ERROR: convert.py produced only $CONVERTED_MD_COUNT of $EXPORTED_MD_COUNT markdown files."
+	exit 1
+fi
 
 # Serve Zola site
 bin/zola --root=build serve
