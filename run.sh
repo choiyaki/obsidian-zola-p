@@ -72,7 +72,7 @@ mkdir -p __site/build/content/docs __site/build/__docs
 export VAULT_CONTENT_ROOT="__obsidian"
 export VAULT_GIT_ROOT="."
 SOURCE_MD_COUNT=$(find __obsidian -type f -name '*.md' | wc -l | tr -d ' ')
-if [ -z "$STRICT_LINE_BREAKS" ]; then
+if [ -z "${STRICT_LINE_BREAKS:-}" ]; then
 	__site/bin/obsidian-export --frontmatter=never --hard-linebreaks --no-recursive-embeds __obsidian __site/build/__docs
 else
 	__site/bin/obsidian-export --frontmatter=never --no-recursive-embeds __obsidian __site/build/__docs
