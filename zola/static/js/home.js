@@ -3,7 +3,6 @@
 document.addEventListener("DOMContentLoaded", function() {
   const container = document.getElementById("home-card-container");
   const sortSelect = document.getElementById("home-sort-select");
-  const randomButton = document.getElementById("home-random-button");
 
   if (!container || typeof page_data === "undefined") return;
 
@@ -211,7 +210,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Sort logic
   function sortPages(modeOverride) {
-    const sortBy = modeOverride || (sortSelect ? sortSelect.value : "updated_desc");
+    const sortBy = typeof modeOverride === "string"
+      ? modeOverride
+      : (sortSelect ? sortSelect.value : "updated_desc");
 
     if (sortBy === "updated_desc") {
       pages.sort((a, b) => parseTimestamp(b.modified) - parseTimestamp(a.modified));
@@ -232,12 +233,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Event Listeners
   if (sortSelect) {
-      sortSelect.addEventListener("change", sortPages);
-  }
-
-  if (randomButton) {
-      randomButton.addEventListener("click", function() {
-          sortPages("random");
+      sortSelect.addEventListener("change", function() {
+        sortPages();
       });
   }
 
