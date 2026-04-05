@@ -16,11 +16,24 @@ chmod +x __site/bin/obsidian-export
 rsync -a __site/zola/ __site/build
 rsync -a __site/content/ __site/build/content
 
-# Normalize YAML frontmatter keys that break obsidian-export (e.g. duplicate "created")
+# Normalize YAML frontmatter that breaks obsidian-export.
+# Some notes contain multiple leading frontmatter blocks; merge them into one and
+# keep the first occurrence of duplicate keys.
 python3 - <<'PY'
+import re
 from pathlib import Path
 
 root = Path("__obsidian")
+
+
+def parse_frontmatter_block(lines, start_idx):
+    if start_idx >= len(lines) or lines[start_idx].strip() != "---":
+        return None
+    for i in range(start_idx + 1, len(lines)):
+        if lines[i].strip() == "---":
+            return lines[start_idx + 1 : i], i
+    return None
+
 
 for p in root.rglob("*.md"):
     try:
@@ -29,41 +42,61 @@ for p in root.rglob("*.md"):
         continue
 
     lines = text.splitlines()
-    if not lines or lines[0].strip() != "---":
+    if not lines:
         continue
 
-    end_idx = None
-    for i in range(1, len(lines)):
-        if lines[i].strip() == "---":
-            end_idx = i
-            break
-    if end_idx is None:
+    pos = 0
+    while pos < len(lines) and not lines[pos].strip():
+        pos += 1
+
+    prefix_end = pos
+    first_block = parse_frontmatter_block(lines, pos)
+    if first_block is None:
         continue
 
-    fm = lines[1:end_idx]
+    merged = []
     seen = set()
-    new_fm = []
     changed = False
+    last_end_idx = pos
 
-    for line in fm:
-        s = line.strip()
-        if not s or s.startswith("#"):
-            new_fm.append(line)
-            continue
-        if ":" not in line:
-            new_fm.append(line)
-            continue
+    while True:
+        block = parse_frontmatter_block(lines, pos)
+        if block is None:
+            break
 
-        key = line.split(":", 1)[0].strip().lower()
-        if key in seen:
-            changed = True
-            continue
+        fm, end_idx = block
+        last_end_idx = end_idx
 
-        seen.add(key)
-        new_fm.append(line)
+        for line in fm:
+            s = line.strip()
+            if not s or s.startswith("#"):
+                merged.append(line)
+                continue
+            if ":" not in line:
+                merged.append(line)
+                continue
+
+            key = line.split(":", 1)[0].strip().lower()
+            if key in seen:
+                changed = True
+                continue
+
+            seen.add(key)
+            merged.append(line)
+
+        next_pos = end_idx + 1
+        while next_pos < len(lines) and not lines[next_pos].strip():
+            next_pos += 1
+
+        next_block = parse_frontmatter_block(lines, next_pos)
+        if next_block is None:
+            break
+
+        changed = True
+        pos = next_pos
 
     if changed:
-        rebuilt = ["---", *new_fm, "---", *lines[end_idx + 1 :]]
+        rebuilt = [*lines[:prefix_end], "---", *merged, "---", *lines[last_end_idx + 1 :]]
         p.write_text("\n".join(rebuilt) + "\n", encoding="utf-8")
 PY
 

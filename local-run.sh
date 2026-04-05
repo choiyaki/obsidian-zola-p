@@ -52,6 +52,87 @@ rm -rf build
 rsync -a zola/ build
 rsync -a content/ build/content
 
+# Normalize YAML frontmatter that breaks obsidian-export.
+python3 - <<'PY'
+from pathlib import Path
+
+root = Path("Published")
+
+
+def parse_frontmatter_block(lines, start_idx):
+	if start_idx >= len(lines) or lines[start_idx].strip() != "---":
+		return None
+	for i in range(start_idx + 1, len(lines)):
+		if lines[i].strip() == "---":
+			return lines[start_idx + 1 : i], i
+	return None
+
+
+for p in root.rglob("*.md"):
+	try:
+		text = p.read_text(encoding="utf-8")
+	except Exception:
+		continue
+
+	lines = text.splitlines()
+	if not lines:
+		continue
+
+	pos = 0
+	while pos < len(lines) and not lines[pos].strip():
+		pos += 1
+
+	prefix_end = pos
+	first_block = parse_frontmatter_block(lines, pos)
+	if first_block is None:
+		continue
+
+	merged = []
+	seen = set()
+	changed = False
+	last_end_idx = pos
+
+	while True:
+		block = parse_frontmatter_block(lines, pos)
+		if block is None:
+			break
+
+		fm, end_idx = block
+		last_end_idx = end_idx
+
+		for line in fm:
+			s = line.strip()
+			if not s or s.startswith("#"):
+				merged.append(line)
+				continue
+			if ":" not in line:
+				merged.append(line)
+				continue
+
+			key = line.split(":", 1)[0].strip().lower()
+			if key in seen:
+				changed = True
+				continue
+
+			seen.add(key)
+			merged.append(line)
+
+		next_pos = end_idx + 1
+		while next_pos < len(lines) and not lines[next_pos].strip():
+			next_pos += 1
+
+		next_block = parse_frontmatter_block(lines, next_pos)
+		if next_block is None:
+			break
+
+		changed = True
+		pos = next_pos
+
+	if changed:
+		rebuilt = [*lines[:prefix_end], "---", *merged, "---", *lines[last_end_idx + 1 :]]
+		p.write_text("\n".join(rebuilt) + "\n", encoding="utf-8")
+PY
+
 # Use obsidian-export to export markdown content from obsidian
 mkdir -p build/content/docs build/__docs
 SOURCE_MD_COUNT=$(find "$VAULT" -type f -name '*.md' | wc -l | tr -d ' ')
