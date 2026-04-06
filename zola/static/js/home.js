@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const ITEMS_PER_PAGE = 50;
   const ITEMS_PER_LOAD = 20;
   let currentlyDisplayed = 0;
-  let currentObserver = null;
+  let isLoadingMore = false;
 
   // Helper to format date
   function formatDate(timestamp) {
@@ -143,49 +143,27 @@ document.addEventListener("DOMContentLoaded", function() {
     for (let i = startIndex; i < endIndex; i++) {
         fragment.appendChild(createCard(pages[i]));
     }
-    
-    // Insert before the observer trigger if it exists
-    const trigger = document.getElementById("infinite-scroll-trigger");
-    if (trigger) {
-        container.insertBefore(fragment, trigger);
-    } else {
-        container.appendChild(fragment);
-    }
+
+    container.appendChild(fragment);
     
     currentlyDisplayed = endIndex;
-    
-    // If all items are loaded, remove observer trigger
-    if (currentlyDisplayed >= pages.length && trigger) {
-        trigger.remove();
-        if (currentObserver) currentObserver.disconnect();
-    }
   }
 
-  // Setup Observer
-  function setupObserver() {
-      // Remove old trigger if any
-      let oldTrigger = document.getElementById("infinite-scroll-trigger");
-      if (oldTrigger) oldTrigger.remove();
-      
-      if (currentlyDisplayed >= pages.length) return;
-      
-      const trigger = document.createElement("div");
-      trigger.id = "infinite-scroll-trigger";
-      trigger.style.height = "20px";
-      trigger.style.width = "100%";
-      container.appendChild(trigger);
-      
-      if (currentObserver) {
-          currentObserver.disconnect();
+    function maybeLoadMore() {
+      if (isLoadingMore || currentlyDisplayed >= pages.length) return;
+
+      const scrollBottom = window.scrollY + window.innerHeight;
+      const pageBottom = document.documentElement.scrollHeight;
+      if (pageBottom - scrollBottom > 600) return;
+
+      isLoadingMore = true;
+      appendItems(currentlyDisplayed, ITEMS_PER_LOAD);
+      isLoadingMore = false;
+
+      // If the page is still shorter than the viewport after loading, keep filling.
+      if (currentlyDisplayed < pages.length) {
+        requestAnimationFrame(maybeLoadMore);
       }
-      
-      currentObserver = new IntersectionObserver((entries) => {
-          if (entries[0].isIntersecting) {
-              appendItems(currentlyDisplayed, ITEMS_PER_LOAD);
-          }
-      }, { rootMargin: "100px" });
-      
-      currentObserver.observe(trigger);
   }
 
   // Initial render cards
@@ -198,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     currentlyDisplayed = 0;
     appendItems(0, ITEMS_PER_PAGE);
-    setupObserver();
+    requestAnimationFrame(maybeLoadMore);
   }
 
   function shufflePages() {
@@ -237,6 +215,9 @@ document.addEventListener("DOMContentLoaded", function() {
         sortPages();
       });
   }
+
+  window.addEventListener("scroll", maybeLoadMore, { passive: true });
+  window.addEventListener("resize", maybeLoadMore);
 
   // Initial render (default sort is updated_desc)
   sortPages();

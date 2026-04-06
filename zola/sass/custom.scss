@@ -72,6 +72,25 @@ main {
   margin: 0 auto;
 }
 
+.page-content-column {
+  --page-link-card-width: 150px;
+  --page-link-card-gap: 12px;
+  --page-link-card-columns: 5;
+  --page-link-grid-max: calc(var(--page-link-card-width) * var(--page-link-card-columns) + var(--page-link-card-gap) * (var(--page-link-card-columns) - 1));
+}
+
+.page.single .page-content-column,
+.docs.single .page-content-column {
+  width: min(100%, calc(var(--page-link-grid-max) + 28px));
+  max-width: calc(var(--page-link-grid-max) + 28px);
+  flex: 0 0 auto;
+}
+
+.page.single article,
+.docs.single .docs-content {
+  max-width: 100%;
+}
+
 /* ホームページのみ幅を広げる */
 body.home, body.home main {
   max-width: 1400px; /* PCでの6列に見合う幅に拡大 */
@@ -85,24 +104,45 @@ body.home, body.home main {
 
 .home-card-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 150px));
+  --card-width: 150px;
+  --card-gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-width), var(--card-width)));
+  max-width: calc(var(--card-width) * 7 + var(--card-gap) * 6);
+  width: 100%;
   justify-content: center;
-  gap: 12px;
+  gap: var(--card-gap);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .link-card-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 150px));
+  --card-width: var(--page-link-card-width, 150px);
+  --card-gap: var(--page-link-card-gap, 12px);
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-width), var(--card-width)));
+  max-width: var(--page-link-grid-max, calc(var(--card-width) * 5 + var(--card-gap) * 4));
+  width: min(100%, var(--page-link-grid-max, calc(var(--card-width) * 5 + var(--card-gap) * 4)));
   justify-content: center;
-  gap: 12px;
+  gap: var(--card-gap);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.link-card-grid .home-card {
+  width: var(--card-width);
+  max-width: var(--card-width);
+  aspect-ratio: 1 / 1;
 }
 
 @media (max-width: 1024px) {
   .home-card-grid {
-    grid-template-columns: repeat(4, minmax(0, 150px));
+    --card-gap: 8px;
+  }
+  .page-content-column {
+    --page-link-card-gap: 8px;
   }
   .link-card-grid {
-    grid-template-columns: repeat(4, minmax(0, 150px));
+    --card-gap: 8px;
   }
 }
 
@@ -136,17 +176,19 @@ body.home, body.home main {
   .home-card-grid {
     padding-left: 6px;
     padding-right: 6px;
-    grid-template-columns: repeat(2, minmax(0, 150px)); /* モバイルは2列 */
+    --card-gap: 4px;
     justify-content: center;
-    gap: 4px; /* 隙間をさらに縮小してギリギリまで広げる */
+  }
+
+  .page-content-column {
+    --page-link-card-gap: 4px;
   }
   
   .link-card-grid {
     padding-left: 6px;
     padding-right: 6px;
-    grid-template-columns: repeat(2, minmax(0, 150px)); /* モバイルは2列 */
+    --card-gap: 4px;
     justify-content: center;
-    gap: 4px;
   }
 
   .home-card {
