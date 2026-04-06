@@ -81,7 +81,7 @@ main {
 
 .page.single .page-content-column,
 .docs.single .page-content-column {
-  width: min(100%, calc(var(--page-link-grid-max) + 28px));
+  width: 100%;
   max-width: calc(var(--page-link-grid-max) + 28px);
   flex: 0 0 auto;
 }
@@ -121,7 +121,7 @@ body.home, body.home main {
   --card-gap: var(--page-link-card-gap, 12px);
   grid-template-columns: repeat(auto-fit, minmax(var(--card-width), var(--card-width)));
   max-width: var(--page-link-grid-max, calc(var(--card-width) * 5 + var(--card-gap) * 4));
-  width: min(100%, var(--page-link-grid-max, calc(var(--card-width) * 5 + var(--card-gap) * 4)));
+  width: 100%;
   justify-content: center;
   gap: var(--card-gap);
   margin-left: auto;
