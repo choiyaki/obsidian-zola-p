@@ -85,22 +85,24 @@ body.home, body.home main {
 
 .home-card-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr); /* スクショ合わせで6列 */
+  grid-template-columns: repeat(7, minmax(0, 150px));
+  justify-content: center;
   gap: 12px;
 }
 
 .link-card-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* デスクトップ版は4列表示 */
+  grid-template-columns: repeat(7, minmax(0, 150px));
+  justify-content: center;
   gap: 12px;
 }
 
 @media (max-width: 1024px) {
   .home-card-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 150px));
   }
   .link-card-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 150px));
   }
 }
 
@@ -134,14 +136,16 @@ body.home, body.home main {
   .home-card-grid {
     padding-left: 6px;
     padding-right: 6px;
-    grid-template-columns: repeat(2, 1fr); /* モバイルは2列 */
+    grid-template-columns: repeat(2, minmax(0, 150px)); /* モバイルは2列 */
+    justify-content: center;
     gap: 4px; /* 隙間をさらに縮小してギリギリまで広げる */
   }
   
   .link-card-grid {
     padding-left: 6px;
     padding-right: 6px;
-    grid-template-columns: repeat(2, 1fr); /* モバイルは2列 */
+    grid-template-columns: repeat(2, minmax(0, 150px)); /* モバイルは2列 */
+    justify-content: center;
     gap: 4px;
   }
 
@@ -153,6 +157,9 @@ body.home, body.home main {
 .home-card {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 150px;
+  justify-self: center;
   padding: 0;
   background: #fff;
   border: 1px solid #e2e2e2;
