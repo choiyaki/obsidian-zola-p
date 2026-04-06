@@ -7,12 +7,18 @@ document.addEventListener("DOMContentLoaded", function() {
   if (!container || typeof page_data === "undefined") return;
 
   // page_data includes: url, title, modified, created, content
-  let pages = [...page_data];
+  let pages = page_data.map((page) => ({
+    ...page,
+    _modifiedTs: parseTimestamp(page.modified),
+    _createdTs: parseTimestamp(page.created),
+  }));
   
-  const ITEMS_PER_PAGE = 50;
-  const ITEMS_PER_LOAD = 20;
+  const INITIAL_ITEMS = 24;
+  const ITEMS_PER_LOAD = 24;
   let currentlyDisplayed = 0;
   let isLoadingMore = false;
+  let observer = null;
+  let sentinel = null;
 
   // Helper to format date
   function formatDate(timestamp) {
@@ -21,7 +27,6 @@ document.addEventListener("DOMContentLoaded", function() {
     return d.toLocaleDateString();
   }
 
-  // Helper to safely parse date values from page metadata
   function parseTimestamp(value) {
     if (typeof value === "number") {
       return value;
@@ -103,6 +108,8 @@ document.addEventListener("DOMContentLoaded", function() {
       const img = document.createElement("img");
       img.src = page.thumbnail;
       img.className = "home-card-thumbnail";
+      img.loading = "lazy";
+      img.decoding = "async";
       img.onerror = function() { this.style.display = 'none'; };
       
       imgContainer.appendChild(img);
@@ -137,6 +144,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Append items to container
   function appendItems(startIndex, count) {
+    if (isLoadingMore) return;
+
+    isLoadingMore = true;
     const fragment = document.createDocumentFragment();
     const endIndex = Math.min(startIndex + count, pages.length);
     
@@ -144,26 +154,71 @@ document.addEventListener("DOMContentLoaded", function() {
         fragment.appendChild(createCard(pages[i]));
     }
 
-    container.appendChild(fragment);
+    if (sentinel && sentinel.isConnected) {
+      container.insertBefore(fragment, sentinel);
+      container.appendChild(sentinel);
+    } else {
+      container.appendChild(fragment);
+    }
     
     currentlyDisplayed = endIndex;
+    isLoadingMore = false;
+
+    if (sentinel) {
+      sentinel.hidden = currentlyDisplayed >= pages.length;
+    }
   }
 
-    function maybeLoadMore() {
-      if (isLoadingMore || currentlyDisplayed >= pages.length) return;
+  function ensureSentinel() {
+    if (!sentinel) {
+      sentinel = document.createElement("div");
+      sentinel.id = "home-card-sentinel";
+      sentinel.setAttribute("aria-hidden", "true");
+      sentinel.style.width = "100%";
+      sentinel.style.height = "1px";
+    }
 
-      const scrollBottom = window.scrollY + window.innerHeight;
-      const pageBottom = document.documentElement.scrollHeight;
-      if (pageBottom - scrollBottom > 600) return;
+    if (!sentinel.isConnected) {
+      container.appendChild(sentinel);
+    }
 
-      isLoadingMore = true;
+    sentinel.hidden = currentlyDisplayed >= pages.length;
+  }
+
+  function setupInfiniteScroll() {
+    ensureSentinel();
+
+    if (!observer) {
+      observer = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (!entry || !entry.isIntersecting || isLoadingMore || currentlyDisplayed >= pages.length) {
+          return;
+        }
+
+        requestAnimationFrame(() => appendItems(currentlyDisplayed, ITEMS_PER_LOAD));
+      }, {
+        rootMargin: "900px 0px",
+      });
+    }
+
+    observer.disconnect();
+    if (currentlyDisplayed < pages.length) {
+      observer.observe(sentinel);
+    }
+  }
+
+  function fillViewportIfNeeded() {
+    if (isLoadingMore || currentlyDisplayed >= pages.length) return;
+
+    const sentinelRect = sentinel ? sentinel.getBoundingClientRect() : null;
+    const needsMore = !sentinelRect || sentinelRect.top <= window.innerHeight + 160;
+    if (!needsMore) return;
+
+    requestAnimationFrame(() => {
       appendItems(currentlyDisplayed, ITEMS_PER_LOAD);
-      isLoadingMore = false;
-
-      // If the page is still shorter than the viewport after loading, keep filling.
-      if (currentlyDisplayed < pages.length) {
-        requestAnimationFrame(maybeLoadMore);
-      }
+      setupInfiniteScroll();
+      fillViewportIfNeeded();
+    });
   }
 
   // Initial render cards
@@ -175,8 +230,9 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     currentlyDisplayed = 0;
-    appendItems(0, ITEMS_PER_PAGE);
-    requestAnimationFrame(maybeLoadMore);
+    appendItems(0, INITIAL_ITEMS);
+    setupInfiniteScroll();
+    fillViewportIfNeeded();
   }
 
   function shufflePages() {
@@ -193,13 +249,13 @@ document.addEventListener("DOMContentLoaded", function() {
       : (sortSelect ? sortSelect.value : "updated_desc");
 
     if (sortBy === "updated_desc") {
-      pages.sort((a, b) => parseTimestamp(b.modified) - parseTimestamp(a.modified));
+      pages.sort((a, b) => b._modifiedTs - a._modifiedTs);
     } else if (sortBy === "updated_asc") {
-      pages.sort((a, b) => parseTimestamp(a.modified) - parseTimestamp(b.modified));
+      pages.sort((a, b) => a._modifiedTs - b._modifiedTs);
     } else if (sortBy === "created_desc") {
-      pages.sort((a, b) => parseTimestamp(b.created) - parseTimestamp(a.created));
+      pages.sort((a, b) => b._createdTs - a._createdTs);
     } else if (sortBy === "created_asc") {
-      pages.sort((a, b) => parseTimestamp(a.created) - parseTimestamp(b.created));
+      pages.sort((a, b) => a._createdTs - b._createdTs);
     } else if (sortBy === "title") {
       pages.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
     } else if (sortBy === "random") {
@@ -215,9 +271,6 @@ document.addEventListener("DOMContentLoaded", function() {
         sortPages();
       });
   }
-
-  window.addEventListener("scroll", maybeLoadMore, { passive: true });
-  window.addEventListener("resize", maybeLoadMore);
 
   // Initial render (default sort is updated_desc)
   sortPages();
