@@ -182,12 +182,6 @@ body.home, body.home main {
   }
 }
 
-@media (min-width: 968px) {
-  .page-content-column {
-    --page-link-card-columns: 6;
-  }
-}
-
 @media (max-width: 1024px) {
   .home-card-grid {
     --card-gap: 8px;
@@ -359,4 +353,55 @@ body.home, body.home main {
   background-color: #2b2b2b;
   border-bottom: 1px solid #333;
   color: #e0e0e0;
+}
+
+.links-section-title {
+  color: #444;
+  margin-top: 3rem;
+  margin-bottom: 1.2rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.twohop-spacer {
+  margin-top: 3rem;
+}
+
+.twohop-group {
+  margin-bottom: 2rem;
+}
+
+.twohop-title {
+  margin: 0 0 0.85rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.twohop-hub-link {
+  display: inline-block;
+  color: #666;
+  text-decoration: none;
+  padding-left: 0.4rem;
+  border-left: 3px solid #d8d8d8;
+}
+
+.twohop-hub-link:hover {
+  color: #3a7bd5;
+  text-decoration: none;
+  border-left-color: #3a7bd5;
+}
+
+.dark .links-section-title {
+  color: #ddd;
+}
+
+.dark .twohop-hub-link {
+  color: #bdbdbd;
+  border-left-color: #4d4d4d;
+}
+
+.dark .twohop-hub-link:hover {
+  color: #7fb0f0;
+  border-left-color: #7fb0f0;
 }

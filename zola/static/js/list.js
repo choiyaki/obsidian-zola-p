@@ -162,11 +162,7 @@ container.innerHTML = "";
 // 1. Render Links (1-hop)
 var titleEl = document.createElement("h3");
 titleEl.textContent = "Links";
-titleEl.style.color = "#444";
-titleEl.style.marginTop = "3rem";
-titleEl.style.marginBottom = "1.5rem";
-titleEl.style.fontSize = "1.5rem";
-titleEl.style.fontWeight = "600";
+titleEl.className = "links-section-title";
 container.appendChild(titleEl);
 
 if (oneHopNodes.length !== 0) {
@@ -186,29 +182,20 @@ if (oneHopNodes.length !== 0) {
 // 2. Render 2-hop links
 if (twoHopGroups.length > 0) {
     var spacer = document.createElement("div");
-    spacer.style.marginTop = "4rem";
+    spacer.className = "twohop-spacer";
     container.appendChild(spacer);
     
     twoHopGroups.forEach(group => {
         var groupSection = document.createElement("div");
-        groupSection.style.marginBottom = "2.5rem";
+      groupSection.className = "twohop-group";
         
         var groupTitle = document.createElement("h4");
-        groupTitle.style.fontSize = "1.1rem";
-        groupTitle.style.fontWeight = "600";
-        groupTitle.style.marginBottom = "1.2rem";
-        groupTitle.style.color = "#555";
+      groupTitle.className = "twohop-title";
         
         var hubLink = document.createElement("a");
         hubLink.href = group.hub.url;
         hubLink.textContent = group.hub.label;
-        hubLink.style.color = "inherit";
-        hubLink.style.textDecoration = "none";
-        hubLink.style.borderBottom = "2px solid #ddd";
-        hubLink.style.paddingBottom = "2px";
-        
-        hubLink.addEventListener("mouseover", function() { this.style.borderBottomColor = "#3a7bd5"; });
-        hubLink.addEventListener("mouseout", function() { this.style.borderBottomColor = "#ddd"; });
+      hubLink.className = "twohop-hub-link";
         
         groupTitle.appendChild(hubLink);
         groupSection.appendChild(groupTitle);
