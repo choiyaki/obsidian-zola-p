@@ -69,7 +69,7 @@ p {
 .docs.single .docs-content ul + p,
 .page.single article ol + p,
 .docs.single .docs-content ol + p {
-  margin-top: 1.05em;
+  margin-top: 1.4em;
 }
 
 .page.single article ul,
@@ -109,15 +109,15 @@ main {
 
 .page-content-column {
   --page-link-card-width: 150px;
-  --page-link-card-gap: 12px;
-  --page-link-card-columns: 5;
+  --page-link-card-gap: 8px;
+  --page-link-card-columns: 4;
   --page-link-grid-max: calc(var(--page-link-card-width) * var(--page-link-card-columns) + var(--page-link-card-gap) * (var(--page-link-card-columns) - 1));
 }
 
 .page.single .page-content-column,
 .docs.single .page-content-column {
   width: 100%;
-  max-width: calc(var(--page-link-grid-max) + 28px);
+  max-width: 100%;
   flex: 0 0 auto;
 }
 
@@ -153,13 +153,14 @@ body.home, body.home main {
 .link-card-grid {
   display: grid;
   --card-width: var(--page-link-card-width, 150px);
-  --card-gap: var(--page-link-card-gap, 12px);
+  --card-gap: var(--page-link-card-gap, 8px);
   grid-template-columns: repeat(auto-fit, minmax(var(--card-width), var(--card-width)));
-  max-width: var(--page-link-grid-max, calc(var(--card-width) * 5 + var(--card-gap) * 4));
+  max-width: var(--page-link-grid-max, calc(var(--card-width) * 4 + var(--card-gap) * 3));
   width: 100%;
-  justify-content: center;
+  justify-content: start;
+  justify-items: start;
   gap: var(--card-gap);
-  margin-left: auto;
+  margin-left: 0;
   margin-right: auto;
 }
 
@@ -167,14 +168,29 @@ body.home, body.home main {
   width: var(--card-width);
   max-width: var(--card-width);
   aspect-ratio: 1 / 1;
+  justify-self: start;
+}
+
+@media (min-width: 810px) {
+  .page-content-column {
+    --page-link-card-columns: 5;
+  }
+
+  .page.single .page-content-column,
+  .docs.single .page-content-column {
+    max-width: calc(var(--page-link-grid-max) + 28px);
+  }
+}
+
+@media (min-width: 968px) {
+  .page-content-column {
+    --page-link-card-columns: 6;
+  }
 }
 
 @media (max-width: 1024px) {
   .home-card-grid {
     --card-gap: 8px;
-  }
-  .page-content-column {
-    --page-link-card-gap: 8px;
   }
   .link-card-grid {
     --card-gap: 8px;
