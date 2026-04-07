@@ -117,7 +117,7 @@ main {
 .page.single .page-content-column,
 .docs.single .page-content-column {
   width: 100%;
-  max-width: 100%;
+  max-width: calc(var(--page-link-grid-max) + 40px);
   flex: 0 0 auto;
 }
 
@@ -178,7 +178,7 @@ body.home, body.home main {
 
   .page.single .page-content-column,
   .docs.single .page-content-column {
-    max-width: calc(var(--page-link-grid-max) + 28px);
+    max-width: calc(var(--page-link-grid-max) + 40px);
   }
 }
 
@@ -233,7 +233,7 @@ body.home, body.home main {
     padding-left: 6px;
     padding-right: 6px;
     --card-gap: 4px;
-    justify-content: center;
+    justify-content: start;
   }
 
   .home-card {
@@ -368,40 +368,71 @@ body.home, body.home main {
 }
 
 .twohop-group {
-  margin-bottom: 2rem;
+  margin-bottom: 1.2rem;
 }
 
-.twohop-title {
-  margin: 0 0 0.85rem 0;
-  font-size: 1rem;
+.twohop-link-card-grid {
+  align-items: start;
+}
+
+.twohop-hub-card {
+  background: linear-gradient(180deg, #4d79ee 0%, #3e67d7 100%);
+  border-color: #3e67d7;
+  color: #fff !important;
+  box-shadow: none;
+}
+
+.twohop-hub-card:hover {
+  transform: none;
+  box-shadow: none;
+  background: linear-gradient(180deg, #5883f4 0%, #466fe0 100%);
+}
+
+.twohop-hub-card .home-card-title,
+.twohop-hub-card .home-card-body,
+.twohop-hub-card .home-card-meta {
+  color: #fff !important;
+}
+
+.twohop-hub-card-title {
+  padding-top: 14px;
+  text-align: center;
+  font-size: 0.72rem !important;
+  line-height: 1.45;
+}
+
+.twohop-hub-card-body {
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.twohop-hub-card-label {
+  font-size: 0.95rem;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.3;
 }
 
-.twohop-hub-link {
-  display: inline-block;
-  color: #666;
-  text-decoration: none;
-  padding-left: 0.4rem;
-  border-left: 3px solid #d8d8d8;
+.twohop-hub-card-icon {
+  font-size: 2rem;
+  line-height: 1;
 }
 
-.twohop-hub-link:hover {
-  color: #3a7bd5;
+.navbar {
+  border-top: 0 !important;
+  border-image: none !important;
+}
+
+.twohop-hub-card:hover,
+.twohop-hub-card:focus {
   text-decoration: none;
-  border-left-color: #3a7bd5;
 }
 
 .dark .links-section-title {
   color: #ddd;
 }
 
-.dark .twohop-hub-link {
-  color: #bdbdbd;
-  border-left-color: #4d4d4d;
-}
-
-.dark .twohop-hub-link:hover {
-  color: #7fb0f0;
-  border-left-color: #7fb0f0;
+.dark .twohop-hub-card {
+  background: linear-gradient(180deg, #5b7ed8 0%, #4a6ac1 100%);
+  border-color: #4a6ac1;
 }

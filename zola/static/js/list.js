@@ -107,6 +107,14 @@ function buildSnippetDOM(content, container) {
   }
 }
 
+function getCardData(node) {
+  const fullData = typeof page_data !== "undefined"
+    ? page_data.find((page) => page.url === node.url || decodeURI(page.url) === decodeURI(node.url))
+    : null;
+
+  return fullData || { url: node.url, title: node.label };
+}
+
 // Create Card
 function createCard(page) {
   const card = document.createElement("a");
@@ -155,6 +163,33 @@ function createCard(page) {
   return card;
 }
 
+function createHubCard(page) {
+  const card = document.createElement("a");
+  card.href = page.url;
+  card.className = "home-card twohop-hub-card text-decoration-none";
+
+  const title = document.createElement("h5");
+  title.className = "home-card-title twohop-hub-card-title";
+  title.textContent = page.title || page.label;
+
+  const body = document.createElement("div");
+  body.className = "home-card-body twohop-hub-card-body";
+
+  const label = document.createElement("div");
+  label.className = "twohop-hub-card-label";
+  label.textContent = "Links";
+
+  const icon = document.createElement("div");
+  icon.className = "twohop-hub-card-icon";
+  icon.textContent = "⛓";
+
+  body.appendChild(label);
+  body.appendChild(icon);
+  card.appendChild(title);
+  card.appendChild(body);
+  return card;
+}
+
 // Get container for list
 var container = document.getElementById("list");
 container.innerHTML = "";
@@ -170,8 +205,7 @@ if (oneHopNodes.length !== 0) {
     grid.className = "link-card-grid";
     
     oneHopNodes.forEach((node) => {
-        let fullData = typeof page_data !== 'undefined' ? page_data.find(p => p.url === node.url || decodeURI(p.url) === decodeURI(node.url)) : null;
-        let cardData = fullData || { url: node.url, title: node.label };
+    let cardData = getCardData(node);
         let card = createCard(cardData);
         grid.appendChild(card);
     });
@@ -187,25 +221,16 @@ if (twoHopGroups.length > 0) {
     
     twoHopGroups.forEach(group => {
         var groupSection = document.createElement("div");
-      groupSection.className = "twohop-group";
-        
-        var groupTitle = document.createElement("h4");
-      groupTitle.className = "twohop-title";
-        
-        var hubLink = document.createElement("a");
-        hubLink.href = group.hub.url;
-        hubLink.textContent = group.hub.label;
-      hubLink.className = "twohop-hub-link";
-        
-        groupTitle.appendChild(hubLink);
-        groupSection.appendChild(groupTitle);
+        groupSection.className = "twohop-group";
         
         var grid = document.createElement("div");
-        grid.className = "link-card-grid";
+        grid.className = "link-card-grid twohop-link-card-grid";
+
+        const hubCard = createHubCard(getCardData(group.hub));
+        grid.appendChild(hubCard);
         
         group.links.forEach((node) => {
-            let fullData = typeof page_data !== 'undefined' ? page_data.find(p => p.url === node.url || decodeURI(p.url) === decodeURI(node.url)) : null;
-            let cardData = fullData || { url: node.url, title: node.label };
+            let cardData = getCardData(node);
             let card = createCard(cardData);
             grid.appendChild(card);
         });
