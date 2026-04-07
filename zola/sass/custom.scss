@@ -58,6 +58,41 @@ p {
   margin: 0.6rem 0;
 }
 
+.page.single article p,
+.docs.single .docs-content p {
+  margin: 0;
+}
+
+.page.single article p + p,
+.docs.single .docs-content p + p,
+.page.single article ul + p,
+.docs.single .docs-content ul + p,
+.page.single article ol + p,
+.docs.single .docs-content ol + p {
+  margin-top: 1.05em;
+}
+
+.page.single article ul,
+.docs.single .docs-content ul,
+.page.single article ol,
+.docs.single .docs-content ol {
+  margin-top: 0.2rem;
+  margin-bottom: 0;
+  padding-left: 1.4em;
+}
+
+.page.single article p + ul,
+.docs.single .docs-content p + ul,
+.page.single article p + ol,
+.docs.single .docs-content p + ol {
+  margin-top: 0.15rem;
+}
+
+.page.single article li,
+.docs.single .docs-content li {
+  margin: 0.1rem 0;
+}
+
 /* サイドバー系を消す */
 .sidebar,
 .docs-sidebar,
