@@ -168,3 +168,12 @@ public
 build
 Published/
 __netlify_test/
+
+# SSH keys and accidental key dumps
+id_*
+id_*.pub
+*.pem
+*.key
+eval "$(ssh-agent -s)"
+eval "$(ssh-agent -s)".pub
+
