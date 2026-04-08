@@ -376,8 +376,8 @@ body.home, body.home main {
 }
 
 .twohop-hub-card {
-  background: linear-gradient(180deg, #4d79ee 0%, #3e67d7 100%);
-  border-color: #3e67d7;
+  background: linear-gradient(180deg, #8fb2ff 0%, #7ea2f0 100%);
+  border-color: #7ea2f0;
   color: #fff !important;
   box-shadow: none;
 }
@@ -385,7 +385,7 @@ body.home, body.home main {
 .twohop-hub-card:hover {
   transform: none;
   box-shadow: none;
-  background: linear-gradient(180deg, #5883f4 0%, #466fe0 100%);
+  background: linear-gradient(180deg, #9abcff 0%, #88acf6 100%);
 }
 
 .twohop-hub-card .home-card-title,
@@ -397,25 +397,20 @@ body.home, body.home main {
 .twohop-hub-card-title {
   padding-top: 14px;
   text-align: center;
-  font-size: 0.72rem !important;
+  font-size: 0.82rem !important;
   line-height: 1.45;
 }
 
 .twohop-hub-card-body {
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .twohop-hub-card-label {
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 500;
   line-height: 1.3;
-}
-
-.twohop-hub-card-icon {
-  font-size: 2rem;
-  line-height: 1;
 }
 
 .navbar {
@@ -433,6 +428,6 @@ body.home, body.home main {
 }
 
 .dark .twohop-hub-card {
-  background: linear-gradient(180deg, #5b7ed8 0%, #4a6ac1 100%);
-  border-color: #4a6ac1;
+  background: linear-gradient(180deg, #6f91db 0%, #5f81cd 100%);
+  border-color: #5f81cd;
 }

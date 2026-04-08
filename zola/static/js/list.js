@@ -179,12 +179,7 @@ function createHubCard(page) {
   label.className = "twohop-hub-card-label";
   label.textContent = "Links";
 
-  const icon = document.createElement("div");
-  icon.className = "twohop-hub-card-icon";
-  icon.textContent = "⛓";
-
   body.appendChild(label);
-  body.appendChild(icon);
   card.appendChild(title);
   card.appendChild(body);
   return card;
