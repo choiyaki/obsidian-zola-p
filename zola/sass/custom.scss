@@ -107,49 +107,10 @@ main {
   margin: 0 auto;
 }
 
-.page-content-column {
-  --page-link-card-width: 150px;
-  --page-link-card-gap: 10px;
-}
-
-/* 記事ページ: Bootstrapコンテナ制約を上書きし、カード枚数ベースの幅にスナップ */
-.page.single .wrap.container,
-.docs.single .wrap.container {
-  max-width: none;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.page.single .content > .row,
-.docs.single .content > .row {
-  margin-left: 0;
-  margin-right: 0;
-}
-
-/* デフォルト(≥862px): 5枚, gap=10px → 150×5+10×4=790 + padding40 = 830px */
-.page.single .page-content-column,
-.docs.single .page-content-column {
-  width: auto !important;
-  flex: none !important;
-  padding-left: 20px;
-  padding-right: 20px;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: calc(150px * 5 + 10px * 4 + 40px);
-}
-
-/* デスクトップ4枚(769-861px): 150×4+10×3=630 + 40 = 670px */
-@media (max-width: 861px) and (min-width: 769px) {
-  .page.single .page-content-column,
-  .docs.single .page-content-column {
-    max-width: calc(150px * 4 + 10px * 3 + 40px);
-  }
-}
-
+/* JSが --content-width を設定し、本文とカードの幅を揃える */
 .page.single article,
 .docs.single .docs-content {
-  width: 100%;
-  max-width: none;
+  max-width: var(--content-width, 100%);
 }
 
 /* ホームページのみ幅を広げる */
@@ -178,34 +139,29 @@ body.home, body.home main {
 
 .link-card-grid {
   display: grid;
-  --card-width: var(--page-link-card-width, 150px);
-  --card-gap: var(--page-link-card-gap, 10px);
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-width), var(--card-width)));
-  width: 100%;
+  grid-template-columns: repeat(var(--link-columns, 5), 150px);
+  width: max-content;
+  gap: var(--link-gap, 12px);
   justify-content: start;
-  justify-items: start;
-  gap: var(--card-gap);
   margin-left: 0;
   margin-right: auto;
 }
 
-/* 記事ページのカードグリッド: paddingはカラムが担当するのでグリッド側は0 */
-.page.single .link-card-grid {
-  padding-left: 0;
-  padding-right: 0;
-}
-
 .link-card-grid .home-card {
-  width: var(--card-width);
-  max-width: var(--card-width);
+  width: 150px;
+  max-width: 150px;
   aspect-ratio: 1 / 1;
   justify-self: start;
 }
 
-
-
 @media (max-width: 1024px) {
   .home-card-grid {
+    --card-gap: 8px;
+  }
+  .page-content-column {
+    --page-link-card-gap: 8px;
+  }
+  .link-card-grid {
     --card-gap: 8px;
   }
 }
@@ -252,35 +208,11 @@ body.home, body.home main {
     padding-left: 6px;
     padding-right: 6px;
     --card-gap: 4px;
-    justify-content: start;
+    justify-content: center;
   }
 
   .home-card {
     aspect-ratio: 1 / 1.02 !important; /* スニペットが崩れない程度のほぼ正方形 */
-  }
-}
-
-/* モバイル4枚(640-768px): gap=4px → 150×4+4×3=612 + padding28 = 640px */
-@media (max-width: 768px) and (min-width: 640px) {
-  .page.single .page-content-column,
-  .docs.single .page-content-column {
-    max-width: 640px;
-  }
-}
-
-/* モバイル3枚(486-639px): 150×3+4×2=458 + 28 = 486px */
-@media (max-width: 639px) and (min-width: 486px) {
-  .page.single .page-content-column,
-  .docs.single .page-content-column {
-    max-width: 486px;
-  }
-}
-
-/* モバイル2枚(≤485px): 150×2+4×1=304 + 28 = 332px */
-@media (max-width: 485px) {
-  .page.single .page-content-column,
-  .docs.single .page-content-column {
-    max-width: 332px;
   }
 }
 
@@ -398,6 +330,8 @@ body.home, body.home main {
   color: #e0e0e0;
 }
 
+/* ===== Links / 2-hop セクション ===== */
+
 .links-section-title {
   color: #444;
   margin-top: 3rem;
@@ -429,6 +363,11 @@ body.home, body.home main {
   transform: none;
   box-shadow: none;
   background: linear-gradient(180deg, #9abcff 0%, #88acf6 100%);
+  text-decoration: none;
+}
+
+.twohop-hub-card:focus {
+  text-decoration: none;
 }
 
 .twohop-hub-card .home-card-title,
@@ -455,6 +394,17 @@ body.home, body.home main {
   font-weight: 500;
   line-height: 1.3;
 }
+
+.dark .links-section-title {
+  color: #ddd;
+}
+
+.dark .twohop-hub-card {
+  background: linear-gradient(180deg, #6f91db 0%, #5f81cd 100%);
+  border-color: #5f81cd;
+}
+
+/* ===== ヘッダー：グラデーションライン削除 & コンパクト化 ===== */
 
 .navbar {
   margin-top: 0 !important;
@@ -497,18 +447,4 @@ body.home, body.home main {
 .navbar .feather {
   width: 18px;
   height: 18px;
-}
-
-.twohop-hub-card:hover,
-.twohop-hub-card:focus {
-  text-decoration: none;
-}
-
-.dark .links-section-title {
-  color: #ddd;
-}
-
-.dark .twohop-hub-card {
-  background: linear-gradient(180deg, #6f91db 0%, #5f81cd 100%);
-  border-color: #5f81cd;
 }

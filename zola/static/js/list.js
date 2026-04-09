@@ -185,9 +185,36 @@ function createHubCard(page) {
   return card;
 }
 
+// ===== カード枚数・本文幅の動的計算 =====
+var CARD_WIDTH = 150;
+var CARD_GAP = 12;
+var MAX_COLUMNS = 5;
+
+function calcLayout() {
+  var col = document.querySelector(".page-content-column");
+  if (!col) return;
+  // カラムの内側利用可能幅を取得（padding除き）
+  var style = getComputedStyle(col);
+  var avail = col.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  // 何枚入るか: n枚 = カード幅*n + gap*(n-1) ≤ avail → n ≤ (avail + gap) / (カード幅 + gap)
+  var n = Math.floor((avail + CARD_GAP) / (CARD_WIDTH + CARD_GAP));
+  if (n < 1) n = 1;
+  if (n > MAX_COLUMNS) n = MAX_COLUMNS;
+  // カードグリッドの実際の幅
+  var gridWidth = CARD_WIDTH * n + CARD_GAP * (n - 1);
+  // CSS変数で本文幅とグリッド列数を設定
+  col.style.setProperty("--content-width", gridWidth + "px");
+  col.style.setProperty("--link-columns", n);
+  col.style.setProperty("--link-gap", CARD_GAP + "px");
+}
+
 // Get container for list
 var container = document.getElementById("list");
 container.innerHTML = "";
+
+// レイアウト計算（初回 + リサイズ時）
+calcLayout();
+window.addEventListener("resize", calcLayout);
 
 // 1. Render Links (1-hop)
 var titleEl = document.createElement("h3");
