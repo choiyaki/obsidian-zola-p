@@ -110,23 +110,46 @@ main {
 .page-content-column {
   --page-link-card-width: 150px;
   --page-link-card-gap: 10px;
-  --page-link-card-columns: 5;
-  --page-link-grid-max: calc(var(--page-link-card-width) * var(--page-link-card-columns) + var(--page-link-card-gap) * (var(--page-link-card-columns) - 1));
 }
 
+/* 記事ページ: Bootstrapコンテナ制約を上書きし、カード枚数ベースの幅にスナップ */
+.page.single .wrap.container,
+.docs.single .wrap.container {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.page.single .content > .row,
+.docs.single .content > .row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* デフォルト(≥862px): 5枚, gap=10px → 150×5+10×4=790 + padding40 = 830px */
 .page.single .page-content-column,
 .docs.single .page-content-column {
-  width: 100%;
-  max-width: calc(var(--page-link-grid-max) + 40px);
-  flex: 0 0 auto;
+  width: auto !important;
+  flex: none !important;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: calc(150px * 5 + 10px * 4 + 40px);
+}
+
+/* デスクトップ4枚(769-861px): 150×4+10×3=630 + 40 = 670px */
+@media (max-width: 861px) and (min-width: 769px) {
+  .page.single .page-content-column,
+  .docs.single .page-content-column {
+    max-width: calc(150px * 4 + 10px * 3 + 40px);
+  }
 }
 
 .page.single article,
 .docs.single .docs-content {
   width: 100%;
-  max-width: var(--page-link-grid-max);
-  margin-left: auto;
-  margin-right: auto;
+  max-width: none;
 }
 
 /* ホームページのみ幅を広げる */
@@ -157,14 +180,19 @@ body.home, body.home main {
   display: grid;
   --card-width: var(--page-link-card-width, 150px);
   --card-gap: var(--page-link-card-gap, 10px);
-  grid-template-columns: repeat(auto-fit, minmax(var(--card-width), var(--card-width)));
-  max-width: var(--page-link-grid-max, calc(var(--card-width) * 5 + var(--card-gap) * 4));
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-width), var(--card-width)));
   width: 100%;
   justify-content: start;
   justify-items: start;
   gap: var(--card-gap);
   margin-left: 0;
   margin-right: auto;
+}
+
+/* 記事ページのカードグリッド: paddingはカラムが担当するのでグリッド側は0 */
+.page.single .link-card-grid {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .link-card-grid .home-card {
@@ -174,29 +202,10 @@ body.home, body.home main {
   justify-self: start;
 }
 
-@media (max-width: 809px) {
-  .page-content-column {
-    --page-link-card-columns: 4;
-  }
-}
 
-@media (max-width: 639px) {
-  .page-content-column {
-    --page-link-card-columns: 3;
-  }
-}
-
-@media (max-width: 469px) {
-  .page-content-column {
-    --page-link-card-columns: 2;
-  }
-}
 
 @media (max-width: 1024px) {
   .home-card-grid {
-    --card-gap: 8px;
-  }
-  .link-card-grid {
     --card-gap: 8px;
   }
 }
@@ -248,6 +257,30 @@ body.home, body.home main {
 
   .home-card {
     aspect-ratio: 1 / 1.02 !important; /* スニペットが崩れない程度のほぼ正方形 */
+  }
+}
+
+/* モバイル4枚(640-768px): gap=4px → 150×4+4×3=612 + padding28 = 640px */
+@media (max-width: 768px) and (min-width: 640px) {
+  .page.single .page-content-column,
+  .docs.single .page-content-column {
+    max-width: 640px;
+  }
+}
+
+/* モバイル3枚(486-639px): 150×3+4×2=458 + 28 = 486px */
+@media (max-width: 639px) and (min-width: 486px) {
+  .page.single .page-content-column,
+  .docs.single .page-content-column {
+    max-width: 486px;
+  }
+}
+
+/* モバイル2枚(≤485px): 150×2+4×1=304 + 28 = 332px */
+@media (max-width: 485px) {
+  .page.single .page-content-column,
+  .docs.single .page-content-column {
+    max-width: 332px;
   }
 }
 
