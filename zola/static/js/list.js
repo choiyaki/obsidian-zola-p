@@ -193,10 +193,15 @@ var MAX_COLUMNS = 5;
 function calcLayout() {
   var col = document.querySelector(".page-content-column");
   if (!col) return;
-  // カラムの内側利用可能幅を取得（padding除き）
-  var style = getComputedStyle(col);
-  var avail = col.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-  // 何枚入るか: n枚 = カード幅*n + gap*(n-1) ≤ avail → n ≤ (avail + gap) / (カード幅 + gap)
+  // 親(row)の幅からBootstrap col-*制約を受けない利用可能幅を取得
+  var row = col.parentElement;
+  var rowWidth = row.clientWidth;
+  // カラムのpaddingを取得
+  var colStyle = getComputedStyle(col);
+  var colPadL = parseFloat(colStyle.paddingLeft);
+  var colPadR = parseFloat(colStyle.paddingRight);
+  var avail = rowWidth - colPadL - colPadR;
+  // 何枚入るか計算
   var n = Math.floor((avail + CARD_GAP) / (CARD_WIDTH + CARD_GAP));
   if (n < 1) n = 1;
   if (n > MAX_COLUMNS) n = MAX_COLUMNS;
@@ -206,6 +211,8 @@ function calcLayout() {
   col.style.setProperty("--content-width", gridWidth + "px");
   col.style.setProperty("--link-columns", n);
   col.style.setProperty("--link-gap", CARD_GAP + "px");
+  // カラム自体の幅もカードに揃える
+  col.style.maxWidth = (gridWidth + colPadL + colPadR) + "px";
 }
 
 // Get container for list

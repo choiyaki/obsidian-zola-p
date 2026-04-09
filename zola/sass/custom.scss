@@ -108,6 +108,13 @@ main {
 }
 
 /* JSが --content-width を設定し、本文とカードの幅を揃える */
+.page.single .page-content-column,
+.docs.single .page-content-column {
+  width: auto !important;
+  max-width: none;
+  flex: 0 0 auto !important;
+}
+
 .page.single article,
 .docs.single .docs-content {
   max-width: var(--content-width, 100%);
