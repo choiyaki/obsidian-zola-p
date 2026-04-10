@@ -213,6 +213,8 @@ function calcLayout() {
   col.style.setProperty("--link-gap", CARD_GAP + "px");
   // カラム自体の幅もカードに揃える
   col.style.maxWidth = (gridWidth + colPadL + colPadR) + "px";
+  // レイアウト確定後に表示
+  col.style.opacity = "1";
 }
 
 // Get container for list

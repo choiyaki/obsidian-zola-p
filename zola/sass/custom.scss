@@ -113,6 +113,8 @@ main {
   width: auto !important;
   max-width: none;
   flex: 0 0 auto !important;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .page.single article,
