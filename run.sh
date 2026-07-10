@@ -106,15 +106,18 @@ export VAULT_CONTENT_ROOT="__obsidian"
 export VAULT_GIT_ROOT="."
 SOURCE_MD_COUNT=$(find __obsidian -type f -name '*.md' | wc -l | tr -d ' ')
 if [ -z "${STRICT_LINE_BREAKS:-}" ]; then
-	__site/bin/obsidian-export --frontmatter=never --hard-linebreaks --no-recursive-embeds __obsidian __site/build/__docs
+	EXPORT_ARGS=(--frontmatter=never --hard-linebreaks --no-recursive-embeds)
 else
-	__site/bin/obsidian-export --frontmatter=never --no-recursive-embeds __obsidian __site/build/__docs
+	EXPORT_ARGS=(--frontmatter=never --no-recursive-embeds)
 fi
+python3 __site/resolve_missing_links.py __site/bin/obsidian-export __obsidian __site/build/__docs "${EXPORT_ARGS[@]}"
 
+# Stub notes created above account for any extra exported files, so the exported
+# count is only expected to be >= the original source count, not exactly equal.
 EXPORTED_MD_COUNT=$(find __site/build/__docs -type f -name '*.md' | wc -l | tr -d ' ')
 echo "Source markdown files: $SOURCE_MD_COUNT"
 echo "Exported markdown files: $EXPORTED_MD_COUNT"
-if [ "$EXPORTED_MD_COUNT" -ne "$SOURCE_MD_COUNT" ]; then
+if [ "$EXPORTED_MD_COUNT" -lt "$SOURCE_MD_COUNT" ]; then
     echo "ERROR: obsidian-export exported only $EXPORTED_MD_COUNT of $SOURCE_MD_COUNT markdown files."
     exit 1
 fi
