@@ -193,12 +193,29 @@ if __name__ == "__main__":
     edges: List[Tuple[str, str]] = []
     page_meta = []
     section_count = 0
+    written_paths: Dict[Path, Path] = {}
 
     all_paths = list(sorted(raw_dir.glob("**/*")))
 
     for path in [raw_dir, *all_paths]:
         doc_path = DocPath(path)
         if doc_path.is_file:
+            # Two differently-named source files can slugify/sanitize to the
+            # same output path (e.g. differing only by punctuation or case).
+            # Writing both would silently overwrite the first with the
+            # second, so fail loudly and name both offending files instead
+            # of letting the exported-vs-converted file count mismatch.
+            if doc_path.new_path in written_paths:
+                raise SystemExit(
+                    "FATAL: output path collision, two source files produce "
+                    f"the same converted path '{doc_path.new_rel_path}':\n"
+                    f"  - {written_paths[doc_path.new_path]}\n"
+                    f"  - {doc_path.old_rel_path}\n"
+                    "Rename one of these files in the vault to make them "
+                    "distinct after slugification."
+                )
+            written_paths[doc_path.new_path] = doc_path.old_rel_path
+
             if doc_path.is_md:
                 # Page
                 nodes[doc_path.abs_url] = doc_path.page_title
