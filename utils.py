@@ -242,10 +242,12 @@ class DocPath:
         """Gets the title of the page."""
 
         # The replacement might not be necessary, filenames cannot contain double quotes
+        # Filenames with repeated/leading/trailing spaces produce empty items on split.
         title = " ".join(
             [
                 item if item[0].isupper() else item.title()
                 for item in self.old_path.stem.split(" ")
+                if item
             ]
         ).replace('"', r"\"")
         return title
