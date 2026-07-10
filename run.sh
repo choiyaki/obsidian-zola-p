@@ -127,7 +127,14 @@ python __site/convert.py
 
 CONVERTED_MD_COUNT=$(find __site/build/content/docs -type f -name '*.md' | wc -l | tr -d ' ')
 echo "Converted markdown files: $CONVERTED_MD_COUNT"
-if [ "$CONVERTED_MD_COUNT" -ne "$EXPORTED_MD_COUNT" ]; then
+
+# convert.py writes one _index.md per vault folder (section) in addition to
+# converting each page, so the converted count legitimately exceeds the
+# exported page count whenever the vault has subfolders. Only a deficit
+# signals a real problem (e.g. two pages colliding onto the same output
+# path), which convert.py itself now detects and fails on immediately with
+# a specific message, so this is a backstop.
+if [ "$CONVERTED_MD_COUNT" -lt "$EXPORTED_MD_COUNT" ]; then
     echo "ERROR: convert.py produced only $CONVERTED_MD_COUNT of $EXPORTED_MD_COUNT markdown files."
     exit 1
 fi
