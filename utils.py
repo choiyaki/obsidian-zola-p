@@ -204,7 +204,7 @@ class DocPath:
     @property
     def section_title(self) -> str:
         """Gets the title of the section."""
-        title = str(self.old_rel_path).replace('"', r"\"")
+        title = str(self.old_rel_path).replace("\\", "\\\\").replace('"', '\\"')
         return (
             title
             if (title != "" and title != ".")
@@ -241,15 +241,17 @@ class DocPath:
     def page_title(self) -> str:
         """Gets the title of the page."""
 
-        # The replacement might not be necessary, filenames cannot contain double quotes
         # Filenames with repeated/leading/trailing spaces produce empty items on split.
+        # Backslashes must be escaped before quotes: this is embedded in a
+        # double-quoted YAML scalar, where a bare backslash starts an escape
+        # sequence and can fail to parse (or silently mangle the title).
         title = " ".join(
             [
                 item if item[0].isupper() else item.title()
                 for item in self.old_path.stem.split(" ")
                 if item
             ]
-        ).replace('"', r"\"")
+        ).replace("\\", "\\\\").replace('"', '\\"')
         return title
 
     @property
