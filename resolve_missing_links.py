@@ -17,6 +17,7 @@ files are removed from the vault again once the second export has captured
 them, so the vault working copy is left as it was found.
 """
 
+import json
 import re
 import subprocess
 import sys
@@ -112,6 +113,19 @@ def remove_stub_notes(vault_dir: Path, stubs: list):
             parent = parent.parent
 
 
+def write_stub_manifest(output_dir: Path, vault_dir: Path, stubs: list):
+    """
+    Records which relative paths were created as empty stub notes (links to
+    notes that don't actually exist in the vault), so convert.py can flag
+    those pages as non-existent instead of treating them like real notes.
+    """
+    manifest_path = output_dir.parent / "stub_pages.json"
+    manifest_path.write_text(
+        json.dumps([str(stub.relative_to(vault_dir)) for stub in stubs]),
+        encoding="utf-8",
+    )
+
+
 def main():
     binary, vault_dir, output_dir, *extra_args = sys.argv[1:]
     vault_dir = Path(vault_dir)
@@ -122,9 +136,11 @@ def main():
 
     if not refs:
         print("No broken wikilinks found.")
+        write_stub_manifest(output_dir, vault_dir, [])
         return
 
     stubs = create_stub_notes(vault_dir, refs)
+    write_stub_manifest(output_dir, vault_dir, stubs)
     if not stubs:
         return
 

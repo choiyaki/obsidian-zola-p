@@ -22,22 +22,26 @@
             {% set index_path = current_path ~ "_index.md" | trim_start_matches(pat="/") %}
             {% set index = get_section(path=index_path) %}
             {% for page in index.pages %}
+              {% if not page.extra.stub %}
               <div class="card my-3">
                 <div class="card-body">
                   <a class="stretched-link" href="{{ page.permalink }}">{{ page.title }} &rarr;</a>
                 </div>
               </div>
+              {% endif %}
             {% endfor %}
             {% for s in index.subsections %}
               {% set subsection = get_section(path=s) %}
               {% if subsection.pages %}
                 {% for page in subsection.pages %}
+                {% if not page.extra.stub %}
                 <div class="card my-3">
                   <div class="card-body">
                     <a class="stretched-link" href="{{ page.permalink }}">{{ page.title }} &rarr;</a>
                   </div>
                 </div>
-                {% endfor %}                                    
+                {% endif %}
+                {% endfor %}
               {% endif %}
             {% endfor %}
           </div>

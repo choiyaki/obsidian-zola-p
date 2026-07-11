@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import subprocess
@@ -10,6 +11,7 @@ from utils import (
     DocPath,
     Settings,
     parse_graph,
+    export_missing_pages,
     export_page_data,
     pp,
     raw_dir,
@@ -189,9 +191,23 @@ if __name__ == "__main__":
     Settings.sub_file(site_dir / "templates/macros/footer.html")
     Settings.sub_file(site_dir / "static/js/graph.js")
 
+    # Pages that exist only because something links to them (obsidian-export
+    # emits an empty stub note for such broken wikilinks so the link stays
+    # followable). These aren't real vault notes, so they're excluded from
+    # page listings and flagged for the frontend to style differently,
+    # Cosense-style.
+    stub_manifest_path = site_dir / "stub_pages.json"
+    if stub_manifest_path.exists():
+        stub_rel_paths = {
+            Path(p) for p in json.loads(stub_manifest_path.read_text(encoding="utf-8"))
+        }
+    else:
+        stub_rel_paths = set()
+
     nodes: Dict[str, str] = {}
     edges: List[Tuple[str, str]] = []
     page_meta = []
+    missing_urls: List[str] = []
     section_count = 0
     written_paths: Dict[Path, Path] = {}
 
@@ -219,6 +235,9 @@ if __name__ == "__main__":
             if doc_path.is_md:
                 # Page
                 nodes[doc_path.abs_url] = doc_path.page_title
+                is_stub = doc_path.old_rel_path in stub_rel_paths
+                if is_stub:
+                    missing_urls.append(doc_path.abs_url)
 
                 # Get git-based timestamps (作成日 / 更新日)
                 yaml_modified, yaml_created = get_yaml_timestamps(doc_path.old_path)
@@ -248,14 +267,17 @@ if __name__ == "__main__":
                         possible_url = f"/docs/{possible_url}"
                     thumbnail = possible_url
 
-                page_meta.append({
-                    "url": doc_path.abs_url,
-                    "title": doc_path.page_title,
-                    "modified": modified_ts,
-                    "created": created_ts,
-                    "content": full_content,
-                    "thumbnail": thumbnail,
-                })
+                # Stub pages exist only to keep links followable; they aren't
+                # real notes, so they're left out of page listings/search.
+                if not is_stub:
+                    page_meta.append({
+                        "url": doc_path.abs_url,
+                        "title": doc_path.page_title,
+                        "modified": modified_ts,
+                        "created": created_ts,
+                        "content": full_content,
+                        "thumbnail": thumbnail,
+                    })
 
                 content = [
                     "---",
@@ -263,6 +285,8 @@ if __name__ == "__main__":
                     f"date: {ts_to_iso(created_ts)}",
                     f"updated: {ts_to_iso(modified_ts)}",
                     "template: docs/page.html",
+                    "extra:",
+                    f"    stub: {'true' if is_stub else 'false'}",
                     "---",
                     # To add last line-break
                     "",
@@ -298,4 +322,5 @@ if __name__ == "__main__":
     pp(edges)
     parse_graph(nodes, edges)
     export_page_data(page_meta)
+    export_missing_pages(missing_urls)
     write_settings()

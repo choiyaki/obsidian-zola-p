@@ -578,3 +578,15 @@ def export_page_data(page_meta: List[Dict]):
         f.write(
             "var page_data = " + json.dumps(page_meta) + ";\n"
         )
+
+
+def export_missing_pages(missing_urls: List[str]):
+    """
+    Writes URLs of stub pages (created only because something links to them,
+    not because they exist as real notes) to a Javascript file, so the
+    frontend can style those links differently from links to real pages.
+    """
+    with open(site_dir / "static/js/missing_pages.js", "w") as f:
+        f.write(
+            "var missing_pages = " + json.dumps(missing_urls) + ";\n"
+        )

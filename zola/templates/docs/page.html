@@ -36,4 +36,7 @@
   {{ macros_list::list_js() }}
 {% endif %}
 
+<script src="{{ get_url(path="js/missing_pages.js") | safe }}" defer></script>
+<script src="{{ get_url(path="js/link-status.js") | safe }}" defer></script>
+
 {% endblock content %}

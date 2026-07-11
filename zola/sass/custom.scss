@@ -53,6 +53,26 @@ a:hover {
   text-decoration: underline;
 }
 
+/* 存在しないページへのリンク（Cosense風: リンク切れではなく「まだ作られていないページ」） */
+.docs-content a.link-missing {
+  color: #9a9a9a;
+  border-bottom: 1px dashed #9a9a9a;
+}
+
+.docs-content a.link-missing:hover {
+  color: #7a7a7a;
+  text-decoration: none;
+}
+
+.dark .docs-content a.link-missing {
+  color: #808080;
+  border-bottom-color: #808080;
+}
+
+.dark .docs-content a.link-missing:hover {
+  color: #a0a0a0;
+}
+
 /* 段落 */
 p {
   margin: 0.6rem 0;
