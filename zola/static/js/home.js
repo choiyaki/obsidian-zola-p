@@ -242,6 +242,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
+  // Pinned pages (front matter `pin: <number>`) always float to the top,
+  // ordered by pin number, regardless of the selected sort mode.
+  function pinRank(page) {
+    return typeof page.pin === "number" ? page.pin : Infinity;
+  }
+
   // Sort logic
   function sortPages(modeOverride) {
     const sortBy = typeof modeOverride === "string"
@@ -261,6 +267,10 @@ document.addEventListener("DOMContentLoaded", function() {
     } else if (sortBy === "random") {
       shufflePages();
     }
+
+    // Stable sort: preserves the ordering above among pages with the same
+    // (non-)pin rank, and only reorders pinned pages to the front.
+    pages.sort((a, b) => pinRank(a) - pinRank(b));
 
     renderAll();
   }

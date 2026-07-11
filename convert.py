@@ -118,38 +118,38 @@ def _parse_timestamp(value: str) -> Optional[int]:
     return None
 
 
-def get_yaml_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
+def _read_yaml_frontmatter_lines(old_path: Path) -> Optional[List[str]]:
     """
-    Read front matter from original source file and return (updated_ts, created_ts).
-    Priority keys:
-      - created: created
-      - updated: update, updated
+    Returns the raw front matter lines (between the `---` markers) of a
+    page's original source file, or None if unavailable. Front matter is
+    stripped by obsidian-export (`--frontmatter=never`), so callers that
+    need it must go back to the source file in the vault.
     """
     content_root = os.environ.get("VAULT_CONTENT_ROOT") or os.environ.get("VAULT")
     if not content_root:
-        return None, None
+        return None
 
     content_root_dir = Path(content_root).resolve()
     if not content_root_dir.is_dir():
-        return None, None
+        return None
 
     try:
         rel = old_path.relative_to(raw_dir)
     except Exception:
-        return None, None
+        return None
 
     source_file = content_root_dir / rel
     if not source_file.exists() or not source_file.is_file():
-        return None, None
+        return None
 
     try:
         text = source_file.read_text(encoding="utf-8")
     except Exception:
-        return None, None
+        return None
 
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
-        return None, None
+        return None
 
     end_idx = None
     for i in range(1, len(lines)):
@@ -158,9 +158,22 @@ def get_yaml_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
             break
 
     if end_idx is None:
+        return None
+
+    return lines[1:end_idx]
+
+
+def get_yaml_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
+    """
+    Read front matter from original source file and return (updated_ts, created_ts).
+    Priority keys:
+      - created: created
+      - updated: update, updated
+    """
+    frontmatter = _read_yaml_frontmatter_lines(old_path)
+    if frontmatter is None:
         return None, None
 
-    frontmatter = lines[1:end_idx]
     created_val = None
     updated_val = None
 
@@ -177,6 +190,31 @@ def get_yaml_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
             updated_val = _parse_timestamp(val)
 
     return updated_val, created_val
+
+
+def get_yaml_pin(old_path: Path) -> Optional[int]:
+    """
+    Reads the `pin` front matter property from a page's original source
+    file. Lower numbers are pinned higher in page listings; a missing or
+    non-numeric value means the page isn't pinned.
+    """
+    frontmatter = _read_yaml_frontmatter_lines(old_path)
+    if frontmatter is None:
+        return None
+
+    for line in frontmatter:
+        m = re.match(r"^\s*([A-Za-z_][\w-]*)\s*:\s*(.*?)\s*$", line)
+        if not m:
+            continue
+        if m.group(1).strip().lower() != "pin":
+            continue
+        val = m.group(2).strip().strip('"').strip("'")
+        try:
+            return int(val)
+        except ValueError:
+            return None
+
+    return None
 
 
 def ts_to_iso(ts: int) -> str:
@@ -245,6 +283,7 @@ if __name__ == "__main__":
                 fs_ts = int(doc_path.modified.timestamp())
                 created_ts = yaml_created or git_created or fs_ts
                 modified_ts = yaml_modified or git_modified or created_ts
+                pin = get_yaml_pin(doc_path.old_path)
 
                 content = doc_path.content
                 parsed_lines: List[str] = []
@@ -277,6 +316,7 @@ if __name__ == "__main__":
                         "created": created_ts,
                         "content": full_content,
                         "thumbnail": thumbnail,
+                        "pin": pin,
                     })
 
                 content = [
