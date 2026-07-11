@@ -91,12 +91,24 @@ document.addEventListener("DOMContentLoaded", function() {
     const card = document.createElement("a");
     card.href = page.url;
     card.className = "home-card text-decoration-none";
-    
+
+    const isPinned = typeof page.pin === "number";
+    if (isPinned) {
+      card.classList.add("home-card-pinned");
+    }
+
     // Title
     const title = document.createElement("h5");
     title.className = "home-card-title";
-    title.textContent = page.title;
-    
+    if (isPinned) {
+      const pinIcon = document.createElement("span");
+      pinIcon.className = "home-card-pin-icon";
+      pinIcon.setAttribute("aria-hidden", "true");
+      pinIcon.textContent = "📌";
+      title.appendChild(pinIcon);
+    }
+    title.appendChild(document.createTextNode(page.title));
+
     // Body Container
     const body = document.createElement("div");
     body.className = "home-card-body";

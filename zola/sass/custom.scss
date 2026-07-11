@@ -271,6 +271,21 @@ body.home, body.home main {
   text-decoration: none;
 }
 
+/* ピン留めされたページ（Cosense風: タイトル先頭に📌、カードをうっすら強調） */
+.home-card-pinned {
+  border-color: #f0c14b;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff 65%);
+}
+
+.home-card-pin-icon {
+  margin-right: 0.2em;
+}
+
+.dark .home-card-pinned {
+  border-color: #8a723a;
+  background: linear-gradient(180deg, #2b2515 0%, #1e1e1e 65%);
+}
+
 .home-card-thumbnail-container {
   flex-grow: 1;
   display: flex;
