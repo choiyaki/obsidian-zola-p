@@ -45,6 +45,7 @@
 
   {% block content %}{% endblock content %}
 
+  <script src="{{ get_url(path="js/content-images.js") | safe }}" defer></script>
   {{ macros_js::javascript() }}  
 </body>
 </html>
