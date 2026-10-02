@@ -2,7 +2,16 @@
 
 set -euo pipefail
 
+BUILD_STARTED_AT=$SECONDS
+STAGE_STARTED_AT=$SECONDS
+
+finish_stage() {
+	echo "Timing: $1 took $((SECONDS - STAGE_STARTED_AT))s"
+	STAGE_STARTED_AT=$SECONDS
+}
+
 pip install python-slugify
+finish_stage "Python dependency installation"
 
 # Avoid copying over netlify.toml (will ebe exposed to public API)
 echo "netlify.toml" >>__obsidian/.gitignore
@@ -11,10 +20,12 @@ echo "netlify.toml" >>__obsidian/.gitignore
 curl -sL https://github.com/zoni/obsidian-export/releases/download/v25.3.0/obsidian-export-x86_64-unknown-linux-gnu.tar.xz | tar xJC /tmp
 cp /tmp/obsidian-export-x86_64-unknown-linux-gnu/obsidian-export __site/bin/obsidian-export
 chmod +x __site/bin/obsidian-export
+finish_stage "obsidian-export download"
 
 # Sync Zola template contents
 rsync -a __site/zola/ __site/build
 rsync -a __site/content/ __site/build/content
+finish_stage "Zola template sync"
 
 # Normalize YAML frontmatter that breaks obsidian-export.
 # Some notes contain multiple leading frontmatter blocks; merge them into one and
@@ -99,6 +110,7 @@ for p in root.rglob("*.md"):
         rebuilt = [*lines[:prefix_end], "---", *merged, "---", *lines[last_end_idx + 1 :]]
         p.write_text("\n".join(rebuilt) + "\n", encoding="utf-8")
 PY
+finish_stage "frontmatter normalization"
 
 # Use obsidian-export to export markdown content from obsidian
 mkdir -p __site/build/content/docs __site/build/__docs
@@ -111,6 +123,7 @@ else
 	EXPORT_ARGS=(--frontmatter=never --no-recursive-embeds)
 fi
 python3 __site/resolve_missing_links.py __site/bin/obsidian-export __obsidian __site/build/__docs "${EXPORT_ARGS[@]}"
+finish_stage "Obsidian export"
 
 # Stub notes created above account for any extra exported files, so the exported
 # count is only expected to be >= the original source count, not exactly equal.
@@ -123,7 +136,9 @@ if [ "$EXPORTED_MD_COUNT" -lt "$SOURCE_MD_COUNT" ]; then
 fi
 
 # Run conversion script
+STAGE_STARTED_AT=$SECONDS
 python __site/convert.py
+finish_stage "Markdown conversion"
 
 CONVERTED_MD_COUNT=$(find __site/build/content/docs -type f -name '*.md' | wc -l | tr -d ' ')
 echo "Converted markdown files: $CONVERTED_MD_COUNT"
@@ -140,4 +155,7 @@ if [ "$CONVERTED_MD_COUNT" -lt "$EXPORTED_MD_COUNT" ]; then
 fi
 
 # Build Zola site
+STAGE_STARTED_AT=$SECONDS
 zola --root __site/build build --output-dir public
+finish_stage "Zola build"
+echo "Timing: total build took $((SECONDS - BUILD_STARTED_AT))s"

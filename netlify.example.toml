@@ -1,5 +1,5 @@
 [build]
-command = "rm -rf __obsidian __site && mkdir __obsidian && mv * __obsidian || true && git clone https://github.com/ppeetteerrs/obsidian-zola.git __site && __site/run.sh"
+command = "rm -rf __obsidian __site && mkdir __obsidian && mv * __obsidian || true && git clone --depth 1 https://github.com/ppeetteerrs/obsidian-zola.git __site && __site/run.sh"
 publish = "public"
 
 [build.environment]
@@ -11,7 +11,7 @@ LANDING_DESCRIPTION = "I have nothing but intelligence."
 LANDING_PAGE = "home"
 # (Optional) Site title on landing page
 LANDING_TITLE = "I love obsidian-zola! 💖"
-PYTHON_VERSION = "3.8"
+PYTHON_VERSION = "3.11"
 # (REQUIRED) Site repo URL
 REPO_URL = "https://github.com/ppeetteerrs/obsidian-zola"
 # (Optional) Site title in navbar

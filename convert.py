@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -18,6 +19,74 @@ from utils import (
     site_dir,
     write_settings,
 )
+
+
+_GIT_TIMESTAMP_CACHE: Dict[
+    Tuple[Path, Path], Optional[Dict[str, Tuple[int, int]]]
+] = {}
+
+
+def _load_git_timestamps(
+    git_root_dir: Path, content_root_dir: Path
+) -> Optional[Dict[str, Tuple[int, int]]]:
+    """Load newest/oldest commit timestamps for every path with one git process."""
+    cache_key = (git_root_dir, content_root_dir)
+    if cache_key in _GIT_TIMESTAMP_CACHE:
+        return _GIT_TIMESTAMP_CACHE[cache_key]
+
+    marker = "__OBSIDIAN_ZOLA_COMMIT__"
+    timestamps: Dict[str, List[int]] = {}
+    try:
+        # Git simplifies merged history differently for each pathspec. A
+        # single repository-wide log is equivalent to the old per-file lookup
+        # only for linear histories (the normal couchNotes backup shape).
+        merge_commit = subprocess.check_output(
+            ["git", "rev-list", "--min-parents=2", "-n", "1", "HEAD"],
+            cwd=str(git_root_dir),
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        if merge_commit:
+            _GIT_TIMESTAMP_CACHE[cache_key] = None
+            return None
+
+        output = subprocess.check_output(
+            [
+                "git",
+                "-c",
+                "core.quotePath=false",
+                "log",
+                f"--format={marker}%ct",
+                "--name-only",
+                "--",
+            ],
+            cwd=str(git_root_dir),
+            stderr=subprocess.DEVNULL,
+        ).decode("utf-8", errors="replace")
+
+        current_ts: Optional[int] = None
+        for line in output.splitlines():
+            if line.startswith(marker):
+                try:
+                    current_ts = int(line[len(marker) :])
+                except ValueError:
+                    current_ts = None
+                continue
+            if not line or current_ts is None:
+                continue
+
+            # git log is newest-first. Keep the first timestamp as modified
+            # and continually replace the second with the oldest occurrence.
+            if line not in timestamps:
+                timestamps[line] = [current_ts, current_ts]
+            else:
+                timestamps[line][1] = current_ts
+    except Exception:
+        timestamps = {}
+
+    result = {path: (values[0], values[1]) for path, values in timestamps.items()}
+    _GIT_TIMESTAMP_CACHE[cache_key] = result
+    return result
 
 
 def get_git_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
@@ -61,6 +130,16 @@ def get_git_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
         except Exception:
             pass
 
+    timestamp_map = _load_git_timestamps(git_root_dir, content_root_dir)
+    if timestamp_map is not None:
+        for candidate in candidates:
+            if candidate in timestamp_map:
+                return timestamp_map[candidate]
+        return None, None
+
+    # Preserve exact Git path-history semantics for repositories containing
+    # merges. They are uncommon for couchNotes backups, so the slower fallback
+    # does not affect the normal Netlify build.
     def run_git(extra_args: list) -> Optional[int]:
         for rel_str in candidates:
             try:
@@ -76,10 +155,7 @@ def get_git_timestamps(old_path: Path) -> Tuple[Optional[int], Optional[int]]:
                 continue
         return None
 
-    modified_ts = run_git(["-1"])
-    created_ts = run_git(["--reverse"])
-
-    return modified_ts, created_ts
+    return run_git(["-1"]), run_git(["--reverse"])
 
 
 def _parse_timestamp(value: str) -> Optional[int]:
@@ -118,6 +194,7 @@ def _parse_timestamp(value: str) -> Optional[int]:
     return None
 
 
+@lru_cache(maxsize=None)
 def _read_yaml_frontmatter_lines(old_path: Path) -> Optional[List[str]]:
     """
     Returns the raw front matter lines (between the `---` markers) of a
@@ -246,8 +323,16 @@ if __name__ == "__main__":
     edges: List[Tuple[str, str]] = []
     page_meta = []
     missing_urls: List[str] = []
+    page_count = 0
+    resource_count = 0
     section_count = 0
     written_paths: Dict[Path, Path] = {}
+    verbose_build = os.environ.get("VERBOSE_BUILD", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "y",
+    )
 
     all_paths = list(sorted(raw_dir.glob("**/*")))
 
@@ -272,6 +357,7 @@ if __name__ == "__main__":
 
             if doc_path.is_md:
                 # Page
+                page_count += 1
                 nodes[doc_path.abs_url] = doc_path.page_title
                 is_stub = doc_path.old_rel_path in stub_rel_paths
                 if is_stub:
@@ -279,7 +365,10 @@ if __name__ == "__main__":
 
                 # Get git-based timestamps (作成日 / 更新日)
                 yaml_modified, yaml_created = get_yaml_timestamps(doc_path.old_path)
-                git_modified, git_created = get_git_timestamps(doc_path.old_path)
+                if yaml_modified is None or yaml_created is None:
+                    git_modified, git_created = get_git_timestamps(doc_path.old_path)
+                else:
+                    git_modified, git_created = None, None
                 fs_ts = int(doc_path.modified.timestamp())
                 created_ts = yaml_created or git_created or fs_ts
                 modified_ts = yaml_modified or git_modified or created_ts
@@ -332,11 +421,14 @@ if __name__ == "__main__":
                     "",
                 ]
                 doc_path.write(["\n".join(content), *parsed_lines])
-                print(f"Found page: {doc_path.new_rel_path}")
+                if verbose_build:
+                    print(f"Found page: {doc_path.new_rel_path}")
             else:
                 # Resource
+                resource_count += 1
                 doc_path.copy()
-                print(f"Found resource: {doc_path.new_rel_path}")
+                if verbose_build:
+                    print(f"Found resource: {doc_path.new_rel_path}")
         else:
             # Section
             sort_val = Settings.options.get("SORT_BY", "title")
@@ -358,8 +450,13 @@ if __name__ == "__main__":
             doc_path.write_to("_index.md", "\n".join(content))
             print(f"Found section: {doc_path.new_rel_path}")
 
-    pp(nodes)
-    pp(edges)
+    if verbose_build:
+        pp(nodes)
+        pp(edges)
+    print(
+        f"Conversion summary: {page_count} pages, "
+        f"{section_count} sections, {resource_count} resources, {len(edges)} links"
+    )
     parse_graph(nodes, edges)
     export_page_data(page_meta)
     export_missing_pages(missing_urls)
